@@ -1,13 +1,17 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, User, ShoppingCart, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
 
 const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuth();
+  const { cart } = useCart();
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const navLinks = [
     { name: 'Home', href: '/' },
@@ -67,7 +71,7 @@ const Navbar = () => {
             ))}
           </nav>
 
-          {/* Right Icons */}
+          {/* Right Icons and Auth Buttons */}
           <div className="flex items-center space-x-4">
             <Button
               variant="ghost"
@@ -76,14 +80,15 @@ const Navbar = () => {
             >
               <Search className="h-5 w-5" />
             </Button>
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/account')}
-            >
-              <User className="h-5 w-5" />
-            </Button>
+            {/* Profile Icon */}
+            <Link to="/profile">
+              <Button
+                variant="ghost"
+                size="icon"
+              >
+                <User className="h-5 w-5" />
+              </Button>
+            </Link>
             
             <Button
               variant="ghost"
@@ -92,10 +97,27 @@ const Navbar = () => {
               className="relative"
             >
               <ShoppingCart className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-black text-white text-xs flex items-center justify-center">
-                0
-              </span>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-black text-white text-xs flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
             </Button>
+            {/* Auth Buttons */}
+            <div className="hidden md:flex items-center space-x-2 ml-4">
+              {!isAuthenticated ? (
+                <>
+                  <Link to="/signin">
+                    <Button variant="outline" className="px-5 py-2 rounded-lg font-semibold border-gray-300 hover:bg-gray-100">Sign In</Button>
+                  </Link>
+                  <Link to="/signup">
+                    <Button className="px-5 py-2 rounded-lg font-semibold bg-black text-white hover:bg-gray-800">Sign Up</Button>
+                  </Link>
+                </>
+              ) : (
+                <Button onClick={logout} variant="outline" className="px-5 py-2 rounded-lg font-semibold border-gray-300 hover:bg-gray-100">Logout</Button>
+              )}
+            </div>
           </div>
         </div>
 
