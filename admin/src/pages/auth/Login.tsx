@@ -1,17 +1,16 @@
-
-import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { TrendingUp, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import { Navigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { TrendingUp, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 export const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login, user } = useAuth();
@@ -83,7 +82,7 @@ export const Login: React.FC = () => {
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 id="password"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="pl-10 pr-10"
@@ -117,10 +116,20 @@ export const Login: React.FC = () => {
                 <span>Signing in...</span>
               </div>
             ) : (
-              'Sign In'
+              "Sign In"
             )}
           </Button>
         </form>
+
+        <div className="mt-4 text-center">
+          <span className="text-gray-600 text-sm">Don't have an account? </span>
+          <a
+            href="/register"
+            className="text-blue-600 hover:underline text-sm font-medium"
+          >
+            Sign up
+          </a>
+        </div>
 
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <p className="text-sm text-gray-600">Demo credentials:</p>

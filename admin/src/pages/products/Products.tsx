@@ -1,11 +1,11 @@
-
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Search, Filter } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ProductTable } from './components/ProductTable';
-import { ProductModal } from './components/ProductModal';
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { Plus, Search, Filter } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ProductTable } from "./components/ProductTable";
+import { ProductModal } from "./components/ProductModal";
+import AdminProductList from "./AdminProductList";
 
 export const Products: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,10 +70,7 @@ export const Products: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
       >
-        <ProductTable
-          searchTerm={searchTerm}
-          onEditProduct={handleEditProduct}
-        />
+        <AdminProductList />
       </motion.div>
 
       <ProductModal
