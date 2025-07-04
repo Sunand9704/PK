@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { mockProducts } from '@/data/products';
@@ -6,11 +7,12 @@ import ProductCard from '@/components/shared/ProductCard';
 import { useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
 
+
 const ProductDetail = () => {
   const { id } = useParams();
-  const product = mockProducts.find(p => p.id === id);
-  const [selectedSize, setSelectedSize] = useState('');
-  const [selectedColor, setSelectedColor] = useState('');
+  const product = mockProducts.find((p) => p.id === id);
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
 
@@ -19,14 +21,16 @@ const ProductDetail = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-          <p className="text-gray-600">The product you're looking for doesn't exist.</p>
+          <p className="text-gray-600">
+            The product you're looking for doesn't exist.
+          </p>
         </div>
       </div>
     );
   }
 
   const relatedProducts = mockProducts
-    .filter(p => p.category === product.category && p.id !== product.id)
+    .filter((p) => p.category === product.category && p.id !== product.id)
     .slice(0, 4);
 
   return (
@@ -45,7 +49,10 @@ const ProductDetail = () => {
             </div>
             <div className="grid grid-cols-4 gap-2">
               {product.images.map((image, index) => (
-                <div key={index} className="aspect-square bg-gray-100 cursor-pointer">
+                <div
+                  key={index}
+                  className="aspect-square bg-gray-100 cursor-pointer"
+                >
                   <img
                     src={image}
                     alt={`${product.name} ${index + 1}`}
@@ -71,7 +78,9 @@ const ProductDetail = () => {
                 </div>
                 <div className="flex items-center space-x-1 text-sm">
                   <span>★ {product.rating}</span>
-                  <span className="text-gray-500">({product.reviews} reviews)</span>
+                  <span className="text-gray-500">
+                    ({product.reviews} reviews)
+                  </span>
                 </div>
               </div>
               <p className="text-gray-600">{product.description}</p>
@@ -85,7 +94,9 @@ const ProductDetail = () => {
                   <Button
                     key={size}
                     variant={selectedSize === size ? "default" : "outline"}
-                    className={selectedSize === size ? "btn-primary" : "btn-secondary"}
+                    className={
+                      selectedSize === size ? "btn-primary" : "btn-secondary"
+                    }
                     onClick={() => setSelectedSize(size)}
                   >
                     {size}
@@ -102,7 +113,9 @@ const ProductDetail = () => {
                   <Button
                     key={color}
                     variant={selectedColor === color ? "default" : "outline"}
-                    className={selectedColor === color ? "btn-primary" : "btn-secondary"}
+                    className={
+                      selectedColor === color ? "btn-primary" : "btn-secondary"
+                    }
                     onClick={() => setSelectedColor(color)}
                   >
                     {color}
@@ -158,7 +171,9 @@ const ProductDetail = () => {
               <h3 className="font-semibold mb-3">Features</h3>
               <ul className="space-y-1">
                 {product.features.map((feature, index) => (
-                  <li key={index} className="text-gray-600">• {feature}</li>
+                  <li key={index} className="text-gray-600">
+                    • {feature}
+                  </li>
                 ))}
               </ul>
             </div>
