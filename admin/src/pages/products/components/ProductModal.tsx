@@ -53,6 +53,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     features: "",
   });
   const [loading, setLoading] = useState(false);
+  const getToken = () => localStorage.getItem('admin_token');
+
   useEffect(() => {
     if (product) {
       setFormData({
@@ -208,7 +210,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         // Update
         res = await fetch(`${baseUrl}/api/admin/products/${product._id}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            'Authorization': `Bearer ${getToken()}`,
+            "Content-Type": "application/json" },
           body: JSON.stringify(productData),
           credentials: "include",
         });
@@ -216,7 +220,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         // Create
         res = await fetch(`${baseUrl}/api/admin/products`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            'Authorization': `Bearer ${getToken()}`,
+            "Content-Type": "application/json" },
           body: JSON.stringify(productData),
           credentials: "include",
         });

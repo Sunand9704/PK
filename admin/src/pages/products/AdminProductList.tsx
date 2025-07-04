@@ -63,6 +63,8 @@ const AdminProductList: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
+  const getToken = () => localStorage.getItem('admin_token');
+
   // Fetch products from server with search, pagination, sorting, and filters
   const fetchProducts = async () => {
     const params = new URLSearchParams({
@@ -106,6 +108,9 @@ const AdminProductList: React.FC = () => {
       {
         method: "DELETE",
         credentials: "include",
+        headers: {
+        'Authorization': `Bearer ${getToken()}`
+      }
       }
     );
     setDeleteDialogOpen(false);

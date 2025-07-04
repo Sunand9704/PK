@@ -44,6 +44,8 @@ exports.updateProduct = async (req, res, next) => {
 // @route   DELETE /api/products/:id
 // @access  Private/Admin
 exports.deleteProduct = async (req, res, next) => {
+  console.log("Caned to delete product");
+  
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
     if (!product) {
