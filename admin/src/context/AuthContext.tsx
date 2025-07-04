@@ -1,5 +1,10 @@
-
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
 interface User {
   id: string;
@@ -12,16 +17,17 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
+const BASE_URL = "http://localhost:8000";
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -36,9 +42,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('admin_token');
-    const storedUser = localStorage.getItem('admin_user');
-    
+    const storedToken = localStorage.getItem("admin_token");
+    const storedUser = localStorage.getItem("admin_user");
+
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
@@ -48,24 +54,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
+    console.log(email, password);
+    
     try {
-      // Simulate API call - replace with actual API
-      if (email === 'admin@pktrends.com' && password === 'admin123') {
-        const mockUser = {
-          id: '1',
-          email: 'admin@pktrends.com',
-          name: 'Admin User',
-          role: 'admin'
-        };
-        const mockToken = 'mock_jwt_token_' + Date.now();
-        
-        setUser(mockUser);
-        setToken(mockToken);
-        localStorage.setItem('admin_token', mockToken);
-        localStorage.setItem('admin_user', JSON.stringify(mockUser));
-      } else {
-        throw new Error('Invalid credentials');
-      }
+      const res = await fetch(`${BASE_URL}/api/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.errors?.[0]?.msg || "Login failed");
+      const token = data.token;
+      // Optionally decode token for user info, or fetch user info from backend
+      const user = { id: "", email, name: "", role: "admin" };
+      setUser(user);
+      setToken(token);
+      localStorage.setItem("admin_token", token);
+      localStorage.setItem("admin_user", JSON.stringify(user));
+      
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (name: string, email: string, password: string) => {
+    setIsLoading(true);
+    console.log(name, email, password);
+    
+    try {
+      const res = await fetch(`${BASE_URL}/api/admin/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok)
+        throw new Error(data.errors?.[0]?.msg || "Registration failed");
+      const token = data.token;
+      const user = { id: "", email, name, role: "admin" };
+      setUser(user);
+      setToken(token);
+      localStorage.setItem("admin_token", token);
+      localStorage.setItem("admin_user", JSON.stringify(user));
     } catch (error) {
       throw error;
     } finally {
@@ -76,14 +108,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_user");
   };
 
   const value = {
     user,
     token,
     login,
+    register,
     logout,
     isLoading,
   };
