@@ -3,7 +3,7 @@
 const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
+
 
   const navLinks = [
     { name: "Home", href: "/" },
