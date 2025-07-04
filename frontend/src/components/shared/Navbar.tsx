@@ -87,13 +87,7 @@ const Navbar = () => {
               <Search className="h-5 w-5" />
             </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/account")}
-            >
-              <User className="h-5 w-5" />
-            </Button>
+           
 
             <Button
               variant="ghost"
