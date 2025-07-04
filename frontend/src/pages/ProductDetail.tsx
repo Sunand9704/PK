@@ -1,4 +1,12 @@
 
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { mockProducts } from '@/data/products';
+import { Button } from '@/components/ui/button';
+import ProductCard from '@/components/shared/ProductCard';
+import { useCart } from '@/context/CartContext';
+import { toast } from '@/components/ui/use-toast';
+
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -6,6 +14,7 @@ const ProductDetail = () => {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const { addToCart } = useCart();
 
   if (!product) {
     return (
@@ -138,8 +147,23 @@ const ProductDetail = () => {
             </div>
 
             {/* Add to Cart */}
-            <Button className="w-full btn-primary text-lg py-3">
-              Add to Cart - ${(product.price * quantity).toFixed(2)}
+            <Button
+              className="mt-6 w-full bg-black text-white hover:bg-gray-800"
+              onClick={() => {
+                addToCart({
+                  id: Number(product.id),
+                  name: product.name,
+                  price: product.price,
+                  image: product.image,
+                  color: selectedColor || product.colors[0],
+                  size: selectedSize || product.sizes[0],
+                  quantity,
+                });
+                toast({ title: 'Item added to cart', description: `${product.name} has been added to your cart.` });
+              }}
+              disabled={!selectedColor || !selectedSize}
+            >
+              Add to Cart
             </Button>
 
             {/* Features */}
