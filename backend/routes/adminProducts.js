@@ -9,8 +9,7 @@ const router = express.Router();
 // Admin-only product CRUD
 router.post(
   "/",
-  // auth,
-  // admin,
+  auth,admin,
   [
     body("name").notEmpty(),
     body("description").notEmpty(),
@@ -22,8 +21,7 @@ router.post(
 );
 router.put(
   "/:id",
-  auth,
-  admin,
+  auth,admin,
   [
     body("name").optional().notEmpty(),
     body("description").optional().notEmpty(),
@@ -33,8 +31,6 @@ router.put(
   ],
   adminProductController.updateProduct
 );
-router.delete("/:id",
-   auth, admin,
-   adminProductController.deleteProduct);
+router.delete("/:id", auth, admin, adminProductController.deleteProduct);
 
 module.exports = router;
