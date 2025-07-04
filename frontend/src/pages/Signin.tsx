@@ -37,6 +37,7 @@ const SignIn = () => {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotError, setForgotError] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState('');
+  const baseUrl = 'http://localhost:8000';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +45,7 @@ const SignIn = () => {
     setSuccess('');
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -73,7 +74,7 @@ const SignIn = () => {
     setForgotLoading(true);
     try {
       // Placeholder API call
-      const res = await fetch('/api/auth/forgot-password', {
+      const res = await fetch(`${baseUrl}/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: forgotEmail })
@@ -100,7 +101,7 @@ const SignIn = () => {
     setForgotLoading(true);
     try {
       // Placeholder API call
-      const res = await fetch('/api/auth/verify-otp', {
+      const res = await fetch(`${baseUrl}/api/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: forgotEmail, otp: forgotOtp })
@@ -131,7 +132,7 @@ const SignIn = () => {
     setForgotLoading(true);
     try {
       // Placeholder API call
-      const res = await fetch('/api/auth/reset-password', {
+        const res = await fetch(`${baseUrl}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: forgotEmail, otp: forgotOtp, password: forgotNewPassword })

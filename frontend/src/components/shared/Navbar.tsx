@@ -1,12 +1,10 @@
-
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Search, User, ShoppingCart, Menu, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useAuth } from '@/context/AuthContext';
-import { useCart } from '@/context/CartContext';
-
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Search, User, ShoppingCart, Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 
 const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -14,7 +12,6 @@ const Navbar = () => {
   const { isAuthenticated, logout } = useAuth();
   const { cart } = useCart();
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -55,6 +52,34 @@ const Navbar = () => {
                       </Link>
                     ))}
                   </nav>
+                  {/* Mobile Auth Buttons */}
+                  <div className="flex flex-col gap-2 pt-6">
+                    {!isAuthenticated ? (
+                      <>
+                        <Link to="/signin">
+                          <Button
+                            variant="outline"
+                            className="w-full px-5 py-2 rounded-lg font-semibold border-gray-300 hover:bg-gray-100"
+                          >
+                            Sign In
+                          </Button>
+                        </Link>
+                        <Link to="/signup">
+                          <Button className="w-full px-5 py-2 rounded-lg font-semibold bg-black text-white hover:bg-gray-800">
+                            Sign Up
+                          </Button>
+                        </Link>
+                      </>
+                    ) : (
+                      <Button
+                        onClick={logout}
+                        variant="outline"
+                        className="w-full px-5 py-2 rounded-lg font-semibold border-gray-300 hover:bg-gray-100"
+                      >
+                        Logout
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
@@ -100,14 +125,10 @@ const Navbar = () => {
 
             {/* Profile Icon */}
             <Link to="/profile">
-              <Button
-                variant="ghost"
-                size="icon"
-              >
+              <Button variant="ghost" size="icon">
                 <User className="h-5 w-5" />
               </Button>
             </Link>
-            
 
             <Button
               variant="ghost"
@@ -127,14 +148,27 @@ const Navbar = () => {
               {!isAuthenticated ? (
                 <>
                   <Link to="/signin">
-                    <Button variant="outline" className="px-5 py-2 rounded-lg font-semibold border-gray-300 hover:bg-gray-100">Sign In</Button>
+                    <Button
+                      variant="outline"
+                      className="px-5 py-2 rounded-lg font-semibold border-gray-300 bg-gray-100 text-black"
+                    >
+                      Sign In
+                    </Button>
                   </Link>
                   <Link to="/signup">
-                    <Button className="px-5 py-2 rounded-lg font-semibold bg-black text-white hover:bg-gray-800">Sign Up</Button>
+                    <Button className="px-5 py-2 rounded-lg font-semibold bg-black text-white hover:bg-gray-800">
+                      Sign Up
+                    </Button>
                   </Link>
                 </>
               ) : (
-                <Button onClick={logout} variant="outline" className="px-5 py-2 rounded-lg font-semibold border-gray-300 hover:bg-gray-100">Logout</Button>
+                <Button
+                  onClick={logout}
+                  variant="outline"
+                  className="px-5 py-2 rounded-lg font-semibold border-gray-300 hover:bg-gray-100"
+                >
+                  Logout
+                </Button>
               )}
             </div>
           </div>
