@@ -1,8 +1,4 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
-import { mockProducts } from "@/data/products";
-import { Button } from "@/components/ui/button";
-import ProductCard from "@/components/shared/ProductCard";
+
 
 const ProductDetail = () => {
   const { id } = useParams();
