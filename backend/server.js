@@ -12,6 +12,9 @@ const productRoutes = require("./routes/products");
 const adminAuthRoutes = require("./routes/adminAuth");
 const uploadRoutes = require("./routes/upload");
 const adminProductsRoutes = require("./routes/adminProducts");
+const categoriesRoute = require("./routes/categories");
+const reviewRoutes = require("./routes/reviews");
+const orderRoutes = require("./routes/orders");
 
 // Load env vars
 dotenv.config();
@@ -23,7 +26,7 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors({ origin: process.env.FRONTEND_URL || true, credentials: true }));
+app.use(cors({ origin: "*" || true, credentials: true }));
 app.use(express.json());
 app.use(morgan("dev"));
 
@@ -31,9 +34,12 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/categories", categoriesRoute);
 app.use("/api/admin", adminAuthRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/admin/products", adminProductsRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/orders", orderRoutes);
 
 // Error Handler
 app.use(errorHandler);

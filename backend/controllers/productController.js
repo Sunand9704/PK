@@ -47,6 +47,7 @@ exports.getAllProducts = async (req, res, next) => {
       Product.find(query).sort(sortObj).skip(skip).limit(parseInt(limit)),
       Product.countDocuments(query),
     ]);
+    console.log(products);
     res.json({ products, total });
   } catch (error) {
     next(error);
@@ -63,6 +64,19 @@ exports.getProductById = async (req, res, next) => {
       return res.status(404).json({ msg: "Product not found" });
     }
     res.json(product);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get products by category
+// @route   GET /api/products/category/:categoryName
+// @access  Public
+exports.getProductsByCategory = async (req, res, next) => {
+  try {
+    const { categoryName } = req.params;
+    const products = await Product.find({ category: categoryName });
+    res.json({ products });
   } catch (error) {
     next(error);
   }
