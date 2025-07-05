@@ -15,6 +15,7 @@ const adminProductsRoutes = require("./routes/adminProducts");
 const categoriesRoute = require("./routes/categories");
 const reviewRoutes = require("./routes/reviews");
 const orderRoutes = require("./routes/orders");
+const dashboardRoutes = require("./routes/dashboard");
 
 // Load env vars
 dotenv.config();
@@ -40,6 +41,7 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/admin/products", adminProductsRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // Error Handler
 app.use(errorHandler);

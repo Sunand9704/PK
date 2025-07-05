@@ -12,6 +12,7 @@ router.use(auth);
 router.post("/", orderController.createOrder);
 router.get("/user", orderController.getUserOrders);
 router.get("/:orderId", orderController.getOrderById);
+router.patch("/:orderId", orderController.updateOrder);
 router.patch("/:orderId/cancel", orderController.cancelOrder);
 
 // Admin routes
