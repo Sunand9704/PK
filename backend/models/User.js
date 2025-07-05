@@ -36,6 +36,17 @@ const userSchema = new mongoose.Schema(
     resetPasswordOtpExpires: {
       type: Date,
     },
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
   },
   { timestamps: true }
 );

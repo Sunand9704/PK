@@ -48,7 +48,7 @@ export const mockProducts: Product[] = [
     price: 89,
     category: "pants",
     image:
-      "https://images.unsplash.com/photo-1506629905607-e7ff3833d066?w=800&h=800&fit=crop",
+      "/placeholder.svg",
     images: [
       "https://images.unsplash.com/photo-1506629905607-e7ff3833d066?w=800&h=800&fit=crop",
       "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=800&h=800&fit=crop",
@@ -270,7 +270,7 @@ export const categories = [
     id: "pants",
     name: "Pants",
     image:
-      "https://images.unsplash.com/photo-1506629905607-e7ff3833d066?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1696889450800-e94ec7a32206?q=80&w=848&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     description: "Comfortable and stylish pants",
   },
   {
