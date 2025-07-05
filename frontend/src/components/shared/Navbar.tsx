@@ -74,7 +74,7 @@ const Navbar = () => {
                       <Button
                         onClick={logout}
                         variant="outline"
-                        className="w-full px-5 py-2 rounded-lg font-semibold border-gray-300 hover:bg-gray-100"
+                        className="w-full px-5 py-2 rounded-lg font-semibold border-gray-300 hover:bg-gray-100 text-black"
                       >
                         Logout
                       </Button>
@@ -95,7 +95,7 @@ const Navbar = () => {
               alt="PK Trends Logo"
               className="h-14 w-auto transition-transform duration-300 hover:scale-105"
             />
-            <span className="text-xl font-bold text-white ml-3 tracking-wider">
+            <span className="text-xl font-bold text-white ml-3 tracking-wider hidden md:inline">
               PK TRENDS
             </span>
           </Link>
@@ -164,8 +164,8 @@ const Navbar = () => {
               ) : (
                 <Button
                   onClick={logout}
-                  variant="outline"
-                  className="px-5 py-2 rounded-lg font-semibold border-gray-300 hover:bg-gray-100"
+                  variant="outline" 
+                  className="px-5 py-2 rounded-lg font-semibold border-gray-300 hover:bg-gray-100 text-black"
                 >
                   Logout
                 </Button>
