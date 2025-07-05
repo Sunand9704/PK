@@ -1,10 +1,9 @@
-
-import React from 'react';
-import { Edit, Trash2, Shield } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import React, { useEffect, useState } from "react";
+import { Edit, Trash2, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -12,79 +11,110 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 
-// Mock data
-const users = [
-  {
-    id: 1,
-    name: 'John Smith',
-    email: 'john@example.com',
-    role: 'customer',
-    status: 'active',
-    joinDate: '2024-01-15',
-    orders: 12
-  },
-  {
-    id: 2,
-    name: 'Sarah Johnson',
-    email: 'sarah@example.com',
-    role: 'customer',
-    status: 'active',
-    joinDate: '2024-01-10',
-    orders: 8
-  },
-  {
-    id: 3,
-    name: 'Mike Davis',
-    email: 'mike@example.com',
-    role: 'admin',
-    status: 'active',
-    joinDate: '2023-12-01',
-    orders: 0
-  },
-  {
-    id: 4,
-    name: 'Emily Wilson',
-    email: 'emily@example.com',
-    role: 'customer',
-    status: 'inactive',
-    joinDate: '2024-01-05',
-    orders: 3
-  },
-];
+// Dummy data commented out for real API integration
+// const users = [ ... ];
 
 interface UserTableProps {
   searchTerm: string;
 }
 
-export const UserTable: React.FC<UserTableProps> = ({ searchTerm }) => {
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+interface User {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  phone?: string;
+  createdAt?: string;
+}
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-100 text-green-800">Active</Badge>;
-      case 'inactive':
-        return <Badge className="bg-gray-100 text-gray-800">Inactive</Badge>;
-      default:
-        return <Badge variant="secondary">Unknown</Badge>;
-    }
-  };
+interface Order {
+  _id: string;
+  orderBy: string | { _id: string };
+}
+
+export const UserTable: React.FC<UserTableProps> = ({ searchTerm }) => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem("admin_token");
+        // Fetch users
+        const userRes = await fetch("http://localhost:8000/api/user/users", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const userData = await userRes.json();
+        if (!userRes.ok)
+          throw new Error(userData.message || "Failed to fetch users");
+        // Fetch orders
+        const orderRes = await fetch("http://localhost:8000/api/orders", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const orderData = await orderRes.json();
+        if (!orderRes.ok)
+          throw new Error(orderData.message || "Failed to fetch orders");
+        setUsers(userData.users || []);
+        setOrders(orderData.orders || []);
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const filteredUsers = users.filter((user) => {
+    const name = `${user.firstName} ${user.lastName}`;
+    return (
+      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   const getRoleBadge = (role: string) => {
     switch (role) {
-      case 'admin':
+      case "admin":
         return <Badge className="bg-purple-100 text-purple-800">Admin</Badge>;
-      case 'customer':
+      case "user":
+      case "customer":
         return <Badge className="bg-blue-100 text-blue-800">Customer</Badge>;
       default:
         return <Badge variant="secondary">Unknown</Badge>;
     }
   };
+
+  const getOrderCount = (userId: string) => {
+    return orders.filter((order) => {
+      if (typeof order.orderBy === "string") return order.orderBy === userId;
+      if (typeof order.orderBy === "object" && order.orderBy !== null)
+        return order.orderBy._id === userId;
+      return false;
+    }).length;
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 text-center text-gray-500">Loading users...</div>
+    );
+  }
+  if (error) {
+    return <div className="p-6 text-center text-red-500">{error}</div>;
+  }
 
   return (
     <Card>
@@ -94,7 +124,7 @@ export const UserTable: React.FC<UserTableProps> = ({ searchTerm }) => {
             <TableRow>
               <TableHead>User</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Phone Number</TableHead>
               <TableHead>Join Date</TableHead>
               <TableHead>Orders</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -102,24 +132,30 @@ export const UserTable: React.FC<UserTableProps> = ({ searchTerm }) => {
           </TableHeader>
           <TableBody>
             {filteredUsers.map((user) => (
-              <TableRow key={user.id}>
+              <TableRow key={user._id}>
                 <TableCell>
                   <div className="flex items-center space-x-3">
                     <Avatar>
                       <AvatarFallback className="bg-gradient-to-r from-purple-500 to-blue-500 text-white">
-                        {user.name.split(' ').map(n => n[0]).join('')}
+                        {`${user.firstName[0] || ""}${user.lastName[0] || ""}`}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium text-gray-900">{user.name}</p>
+                      <p className="font-medium text-gray-900">
+                        {user.firstName} {user.lastName}
+                      </p>
                       <p className="text-sm text-gray-500">{user.email}</p>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell>{getRoleBadge(user.role)}</TableCell>
-                <TableCell>{getStatusBadge(user.status)}</TableCell>
-                <TableCell>{user.joinDate}</TableCell>
-                <TableCell>{user.orders}</TableCell>
+                <TableCell>{user.phone || "N/A"}</TableCell>
+                <TableCell>
+                  {user.createdAt
+                    ? new Date(user.createdAt).toLocaleDateString()
+                    : new Date().toLocaleDateString()}
+                </TableCell>
+                <TableCell>{getOrderCount(user._id)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end space-x-2">
                     <Button variant="ghost" size="icon">
@@ -128,7 +164,11 @@ export const UserTable: React.FC<UserTableProps> = ({ searchTerm }) => {
                     <Button variant="ghost" size="icon">
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-600 hover:text-red-700"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>

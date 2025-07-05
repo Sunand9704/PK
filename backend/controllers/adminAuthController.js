@@ -42,10 +42,12 @@ exports.loginAdmin = async (req, res, next) => {
   
   try {
     const admin = await Admin.findOne({ email });
+    console.log(admin);
     if (!admin) {
       return res.status(400).json({ errors: [{ msg: "Invalid credentials" }] });
     }
     const isMatch = await admin.matchPassword(password);
+    console.log(isMatch);
     if (!isMatch) {
       return res.status(400).json({ errors: [{ msg: "Invalid credentials" }] });
     }

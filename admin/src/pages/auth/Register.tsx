@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, AlertCircle, Lock } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -13,13 +14,13 @@ const Register: React.FC = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState("");
-  const [apiError, setApiError] = useState("");
-  const { register } = useAuth();
+  const { register, error, clearError } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: "" });
+    if (error) clearError();
   };
 
   const validate = () => {
@@ -34,7 +35,7 @@ const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setApiError("");
+    clearError();
     setSuccess("");
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -48,9 +49,40 @@ const Register: React.FC = () => {
       setForm({ name: "", email: "", password: "", confirmPassword: "" });
       setTimeout(() => navigate("/login"), 1200);
     } catch (error: any) {
-      setApiError(error.message || "Registration failed");
+      // Error is already set in the context, so we don't need to handle it here
+      console.error("Registration error:", error);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const getErrorIcon = (errorType: string) => {
+    switch (errorType) {
+      case "network":
+        return <AlertCircle className="h-4 w-4" />;
+      case "validation":
+        return <AlertCircle className="h-4 w-4" />;
+      case "auth":
+        return <Lock className="h-4 w-4" />;
+      case "server":
+        return <AlertCircle className="h-4 w-4" />;
+      default:
+        return <AlertCircle className="h-4 w-4" />;
+    }
+  };
+
+  const getErrorVariant = (errorType: string) => {
+    switch (errorType) {
+      case "network":
+        return "destructive";
+      case "validation":
+        return "destructive";
+      case "auth":
+        return "destructive";
+      case "server":
+        return "destructive";
+      default:
+        return "destructive";
     }
   };
 
@@ -66,9 +98,21 @@ const Register: React.FC = () => {
           </h2>
           <p className="text-gray-600 mt-1">Create your admin account</p>
         </div>
+
+        {error && (
+          <Alert variant={getErrorVariant(error.type) as any} className="mb-4">
+            {getErrorIcon(error.type)}
+            <AlertDescription>{error.message}</AlertDescription>
+          </Alert>
+        )}
+
+        {success && (
+          <Alert className="mb-4 bg-green-50 border-green-200 text-green-800">
+            <AlertDescription>{success}</AlertDescription>
+          </Alert>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          {apiError && <div className="text-red-500 mb-4">{apiError}</div>}
-          {success && <div className="text-green-600 mb-4">{success}</div>}
           <div className="space-y-2">
             <label className="block mb-1 font-medium">Name</label>
             <input

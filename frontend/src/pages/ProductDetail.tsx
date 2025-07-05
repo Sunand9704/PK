@@ -5,7 +5,18 @@ import ProductCard from "@/components/shared/ProductCard";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "@/components/ui/use-toast";
-import { Star } from "lucide-react";
+import { Star, Tag } from "lucide-react";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -27,6 +38,28 @@ const ProductDetail = () => {
   const [editingReviewId, setEditingReviewId] = useState(null);
   const [editReviewText, setEditReviewText] = useState("");
   const [editReviewRating, setEditReviewRating] = useState(0);
+
+  // Buy Now functionality states
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
+  const [checkoutSuccess, setCheckoutSuccess] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    address: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "",
+    email: "",
+    phone: "",
+    notes: "",
+  });
+  const [touched, setTouched] = useState<{ [k: string]: boolean }>({});
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("razorpay");
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -89,6 +122,149 @@ const ProductDetail = () => {
     }
     if (id) fetchProduct();
   }, [id, isAuthenticated, token]);
+
+  // Buy Now functions
+  const handleBlur = (field: string) =>
+    setTouched((t) => ({ ...t, [field]: true }));
+
+  const createOrder = async (paymentMethod: string) => {
+    if (!token) {
+      toast({
+        title: "Please sign in to place an order",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!selectedSize || !selectedColor) {
+      toast({
+        title: "Please select size and color",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    setOrderLoading(true);
+    try {
+      const response = await fetch(`${baseUrl}/api/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          productId: product._id || product.id,
+          price: product.price * quantity,
+          quantity: quantity,
+          shippingAddress: {
+            name: form.name,
+            address: form.address,
+            city: form.city,
+            state: form.state,
+            zip: form.zip,
+            country: form.country,
+            email: form.email,
+            phone: form.phone,
+          },
+          paymentMethod,
+          notes: form.notes,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.msg || "Failed to create order");
+      }
+
+      const orderData = await response.json();
+
+      toast({
+        title: "Order placed successfully!",
+        description: `Your order has been created. Order ID: ${orderData.order?.orderId}`,
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Error creating order:", error);
+      toast({
+        title: "Failed to place order",
+        description:
+          error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setOrderLoading(false);
+    }
+  };
+
+  const handleCheckout = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCheckoutError("");
+    setCheckoutSuccess("");
+    setCheckoutLoading(true);
+    if (
+      !form.name ||
+      !form.address ||
+      !form.city ||
+      !form.state ||
+      !form.zip ||
+      !form.country ||
+      !form.email ||
+      !form.phone
+    ) {
+      setCheckoutError("Please fill in all required fields.");
+      setCheckoutLoading(false);
+      return;
+    }
+    setTimeout(() => {
+      setCheckoutSuccess("Checkout info submitted!");
+      setCheckoutLoading(false);
+      setCheckoutOpen(false);
+      setPaymentDialogOpen(true);
+    }, 1200);
+  };
+
+  const handleRazorpay = async () => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+    script.onload = async () => {
+      const options = {
+        key: "rzp_test_1DP5mmOlF5G5ag", // Razorpay test key
+        amount: Math.round(product.price * quantity * 100),
+        currency: "INR",
+        name: "PK Trends",
+        description: `Order for ${product.name}`,
+        handler: async function (response: any) {
+          // Create order after successful payment
+          const success = await createOrder("razorpay");
+          if (success) {
+            setPaymentSuccess(true);
+            setPaymentDialogOpen(false);
+          }
+        },
+        prefill: {
+          name: form.name,
+          email: form.email,
+          contact: form.phone,
+        },
+        theme: { color: "#111" },
+      };
+      // @ts-ignore
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    };
+  };
+
+  const handleCOD = async () => {
+    const success = await createOrder("cod");
+    if (success) {
+      setPaymentSuccess(true);
+      setPaymentDialogOpen(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -225,10 +401,10 @@ const ProductDetail = () => {
 
             {/* Add to Cart */}
             <Button
-              className="mt-6 w-full bg-black text-white hover:bg-gray-800"
+              className="w-full bg-black text-white hover:bg-gray-800"
               onClick={() => {
                 addToCart({
-                  id: Number(product.id),
+                  id: product._id || product.id,
                   name: product.name,
                   price: product.price,
                   image: product.image,
@@ -245,6 +421,334 @@ const ProductDetail = () => {
             >
               Add to Cart
             </Button>
+
+            {/* Buy Now */}
+            <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  className="w-full bg-green-600 text-white hover:bg-green-700"
+                  disabled={!selectedColor || !selectedSize}
+                >
+                  Buy Now
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Checkout</DialogTitle>
+                  <DialogDescription>
+                    Enter your shipping address and contact details.
+                  </DialogDescription>
+                </DialogHeader>
+                <form
+                  onSubmit={handleCheckout}
+                  className="space-y-6 bg-gray-50 p-4 rounded-lg border border-gray-200"
+                >
+                  {/* Order Summary */}
+                  <div className="bg-white p-4 rounded-lg border">
+                    <h3 className="font-semibold mb-3">Order Summary</h3>
+                    <div className="flex items-center space-x-4 mb-3">
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="w-16 h-16 object-cover rounded"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-medium">{product.name}</h4>
+                        <p className="text-sm text-gray-600">
+                          Size: {selectedSize} | Color: {selectedColor}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Quantity: {quantity}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">
+                          ${product.price * quantity}
+                        </p>
+                      </div>
+                    </div>
+                    <Separator className="my-3" />
+                    <div className="flex justify-between font-semibold">
+                      <span>Total</span>
+                      <span>${product.price * quantity}</span>
+                    </div>
+                  </div>
+
+                  {/* Shipping Address */}
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2 text-black">
+                      Shipping Address
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Full Name
+                        </label>
+                        <Input
+                          placeholder="Full Name"
+                          value={form.name}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, name: e.target.value }))
+                          }
+                          onBlur={() => handleBlur("name")}
+                          className={
+                            touched.name && !form.name ? "border-red-500" : ""
+                          }
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Address
+                        </label>
+                        <Input
+                          placeholder="Address"
+                          value={form.address}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, address: e.target.value }))
+                          }
+                          onBlur={() => handleBlur("address")}
+                          className={
+                            touched.address && !form.address
+                              ? "border-red-500"
+                              : ""
+                          }
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          City
+                        </label>
+                        <Input
+                          placeholder="City"
+                          value={form.city}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, city: e.target.value }))
+                          }
+                          onBlur={() => handleBlur("city")}
+                          className={
+                            touched.city && !form.city ? "border-red-500" : ""
+                          }
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          State
+                        </label>
+                        <Input
+                          placeholder="State"
+                          value={form.state}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, state: e.target.value }))
+                          }
+                          onBlur={() => handleBlur("state")}
+                          className={
+                            touched.state && !form.state ? "border-red-500" : ""
+                          }
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          ZIP Code
+                        </label>
+                        <Input
+                          placeholder="ZIP Code"
+                          value={form.zip}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, zip: e.target.value }))
+                          }
+                          onBlur={() => handleBlur("zip")}
+                          className={
+                            touched.zip && !form.zip ? "border-red-500" : ""
+                          }
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Country
+                        </label>
+                        <Input
+                          placeholder="Country"
+                          value={form.country}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, country: e.target.value }))
+                          }
+                          onBlur={() => handleBlur("country")}
+                          className={
+                            touched.country && !form.country
+                              ? "border-red-500"
+                              : ""
+                          }
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {/* Contact Info */}
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2 text-black">
+                      Contact Info
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Email
+                        </label>
+                        <Input
+                          placeholder="Email"
+                          type="email"
+                          value={form.email}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, email: e.target.value }))
+                          }
+                          onBlur={() => handleBlur("email")}
+                          className={
+                            touched.email && !form.email ? "border-red-500" : ""
+                          }
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Phone Number
+                        </label>
+                        <Input
+                          placeholder="Phone Number"
+                          value={form.phone}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, phone: e.target.value }))
+                          }
+                          onBlur={() => handleBlur("phone")}
+                          className={
+                            touched.phone && !form.phone ? "border-red-500" : ""
+                          }
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {/* Notes */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Notes (optional)
+                    </label>
+                    <Input
+                      placeholder="Any special instructions..."
+                      value={form.notes}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, notes: e.target.value }))
+                      }
+                    />
+                  </div>
+                  {checkoutError && (
+                    <div className="text-red-500 text-sm text-center font-medium">
+                      {checkoutError}
+                    </div>
+                  )}
+                  {checkoutSuccess && (
+                    <div className="text-green-600 text-sm text-center font-medium">
+                      {checkoutSuccess}
+                    </div>
+                  )}
+                  <DialogFooter>
+                    <Button
+                      type="submit"
+                      className="w-full bg-black text-white hover:bg-gray-800 text-lg font-semibold"
+                      disabled={checkoutLoading}
+                    >
+                      {checkoutLoading
+                        ? "Submitting..."
+                        : "Continue to Payment"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            {/* Payment Dialog */}
+            <Dialog
+              open={paymentDialogOpen}
+              onOpenChange={setPaymentDialogOpen}
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Payment</DialogTitle>
+                  <DialogDescription>
+                    Select your payment method and complete your order.
+                  </DialogDescription>
+                </DialogHeader>
+                {!paymentSuccess ? (
+                  <>
+                    <h3 className="font-semibold text-lg mb-4 text-black">
+                      Select Payment Method
+                    </h3>
+                    <div className="flex flex-col gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="razorpay"
+                          checked={paymentMethod === "razorpay"}
+                          onChange={() => setPaymentMethod("razorpay")}
+                        />
+                        <span>UPI / Cards / Netbanking (Razorpay)</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="cod"
+                          checked={paymentMethod === "cod"}
+                          onChange={() => setPaymentMethod("cod")}
+                        />
+                        <span>Cash on Delivery</span>
+                      </label>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        className="w-full bg-black text-white hover:bg-gray-800 text-lg font-semibold mt-4"
+                        onClick={
+                          paymentMethod === "razorpay"
+                            ? handleRazorpay
+                            : handleCOD
+                        }
+                        disabled={orderLoading}
+                      >
+                        {orderLoading
+                          ? "Processing..."
+                          : paymentMethod === "razorpay"
+                            ? "Pay Now"
+                            : "Place Order"}
+                      </Button>
+                    </DialogFooter>
+                  </>
+                ) : (
+                  <div className="mt-6 text-center">
+                    <h3 className="text-2xl font-bold text-green-600 mb-2">
+                      Order Placed Successfully!
+                    </h3>
+                    <p className="text-gray-700">
+                      Thank you for your order. You will receive a confirmation
+                      email soon.
+                    </p>
+                    <Button
+                      className="mt-4 bg-black text-white hover:bg-gray-800"
+                      onClick={() => {
+                        setPaymentDialogOpen(false);
+                        setPaymentSuccess(false);
+                        window.location.href = "/profile";
+                      }}
+                    >
+                      View My Orders
+                    </Button>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
 
             {/* Features */}
             <div>

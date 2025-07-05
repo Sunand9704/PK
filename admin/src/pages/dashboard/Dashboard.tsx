@@ -25,7 +25,7 @@ export const Dashboard: React.FC = () => {
         <TopProducts />
       </div>
 
-      <RecentActivity />
+      {/* <RecentActivity /> */}
     </div>
   );
 };

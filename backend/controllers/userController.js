@@ -73,3 +73,17 @@ exports.removeFromWishlist = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Get all users (admin only)
+// @route   GET /api/users
+// @access  Private (admin)
+exports.getAllUsers = async (req, res, next) => {
+  try {
+    console.log("Fetching all users...");
+    const users = await User.find().select("-password");
+    res.json({ users });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    next(error);
+  }
+};

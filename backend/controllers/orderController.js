@@ -1,14 +1,98 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const User = require("../models/User");
+const nodemailer = require("nodemailer");
+
+// Email transporter configuration
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "laptoptest7788@gmail.com",
+    pass: "uqfiabjkiqudrgdw",
+  },
+});
+
+// Helper function to send order emails
+const sendOrderEmail = async (
+  userEmail,
+  userName,
+  orderId,
+  subject,
+  message
+) => {
+  try {
+    const mailOptions = {
+      from: "laptoptest7788@gmail.com",
+      to: userEmail,
+      subject: subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border-radius: 8px; background: #f9f9f9; border: 1px solid #eee;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <h2 style="color: #4F46E5; margin: 0;">PK Trends</h2>
+            <p style="color: #666; margin: 8px 0;">Your Fashion Destination</p>
+          </div>
+          
+          <div style="background: white; padding: 24px; border-radius: 8px; margin-bottom: 24px;">
+            <h3 style="color: #222; margin-top: 0;">Hello ${userName},</h3>
+            <p style="color: #444; line-height: 1.6;">${message}</p>
+            
+            <div style="background: #f8f9fa; padding: 16px; border-radius: 6px; margin: 20px 0;">
+              <p style="margin: 0; color: #666; font-size: 14px;">
+                <strong>Order ID:</strong> ${orderId}
+              </p>
+            </div>
+          </div>
+          
+          <div style="text-align: center; color: #666; font-size: 12px;">
+            <p>Thank you for choosing PK Trends!</p>
+            <p>If you have any questions, please contact our support team.</p>
+          </div>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error("Error sending email:", error);
+  }
+};
+
+// Helper function to update product soldCount
+const updateProductSoldCount = async (productId, quantity, operation) => {
+  try {
+    const product = await Product.findById(productId);
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    if (operation === "increase") {
+      product.soldCount += quantity;
+    } else if (operation === "decrease") {
+      product.soldCount = Math.max(0, product.soldCount - quantity); // Prevent negative values
+    }
+
+    await product.save();
+    return product;
+  } catch (error) {
+    throw error;
+  }
+};
 
 // @desc    Create a new order
 // @route   POST /api/orders
 // @access  Private
 exports.createOrder = async (req, res, next) => {
   try {
-    const { productId, price } = req.body;
+    const {
+      productId,
+      price,
+      quantity = 1,
+      shippingAddress,
+      paymentMethod = "cod",
+      notes = "",
+    } = req.body;
     const userId = req.user.id;
+    console.log(req.body.productId);
 
     // Validate input
     if (!productId || !price) {
@@ -29,17 +113,50 @@ exports.createOrder = async (req, res, next) => {
       return res.status(404).json({ msg: "User not found" });
     }
 
-    // Create the order
+    // Create the order with additional fields
     const order = new Order({
       productId,
       orderBy: userId,
       price,
+      quantity,
+      shippingAddress,
+      paymentMethod,
+      notes,
+      status: paymentMethod === "cod" ? "pending" : "processing",
     });
 
     await order.save();
 
+    // Update product soldCount for successful orders (non-cod orders are considered successful immediately)
+    if (paymentMethod !== "cod") {
+      await updateProductSoldCount(productId, quantity, "increase");
+    }
+
     // Populate product details
     await order.populate("productId");
+
+    // Send order confirmation email
+    const userName = `${user.firstName} ${user.lastName}`;
+    const orderMessage = `
+      Your order has been successfully placed! We're excited to process your order and get it ready for delivery.
+      <br><br>
+      <strong>Order Details:</strong><br>
+      Product: ${product.name}<br>
+      Quantity: ${quantity}<br>
+      Total Amount: ₹${price * quantity}<br>
+      Payment Method: ${paymentMethod.toUpperCase()}<br>
+      Status: ${paymentMethod === "cod" ? "Pending" : "Processing"}
+      <br><br>
+      We'll keep you updated on your order status via email.
+    `;
+
+    await sendOrderEmail(
+      user.email,
+      userName,
+      order.orderId,
+      "Order Confirmed - PK Trends",
+      orderMessage
+    );
 
     res.status(201).json({
       msg: "Order created successfully",
@@ -138,11 +255,108 @@ exports.updateOrderStatus = async (req, res, next) => {
       return res.status(404).json({ msg: "Order not found" });
     }
 
+    const previousStatus = order.status;
     order.status = status;
     await order.save();
 
+    // Handle soldCount updates based on status changes
+    if (previousStatus !== "cancelled" && status === "cancelled") {
+      // Order is being cancelled - decrease soldCount
+      await updateProductSoldCount(order.productId, order.quantity, "decrease");
+    } else if (previousStatus === "pending" && status === "delivered") {
+      // COD order is being delivered - increase soldCount
+      if (order.paymentMethod === "cod") {
+        await updateProductSoldCount(
+          order.productId,
+          order.quantity,
+          "increase"
+        );
+      }
+    }
+
     await order.populate("productId");
     await order.populate("orderBy", "firstName lastName email");
+
+    // Send status update email
+    const user = await User.findById(order.orderBy);
+    if (user) {
+      const userName = `${user.firstName} ${user.lastName}`;
+      let statusMessage = "";
+      let emailSubject = "";
+
+      switch (status) {
+        case "processing":
+          emailSubject = "Order Processing - PK Trends";
+          statusMessage = `
+            Great news! Your order is now being processed. Our team is preparing your items for shipment.
+            <br><br>
+            <strong>Order Details:</strong><br>
+            Product: ${order.productId.name}<br>
+            Quantity: ${order.quantity}<br>
+            Total Amount: ₹${order.price * order.quantity}
+            <br><br>
+            We'll notify you once your order is shipped.
+          `;
+          break;
+        case "shipped":
+          emailSubject = "Order Shipped - PK Trends";
+          statusMessage = `
+            Exciting news! Your order has been shipped and is on its way to you.
+            <br><br>
+            <strong>Order Details:</strong><br>
+            Product: ${order.productId.name}<br>
+            Quantity: ${order.quantity}<br>
+            Total Amount: ₹${order.price * order.quantity}
+            <br><br>
+            You'll receive another notification when your order is delivered.
+          `;
+          break;
+        case "delivered":
+          emailSubject = "Order Delivered - PK Trends";
+          statusMessage = `
+            Your order has been successfully delivered! We hope you love your purchase.
+            <br><br>
+            <strong>Order Details:</strong><br>
+            Product: ${order.productId.name}<br>
+            Quantity: ${order.quantity}<br>
+            Total Amount: ₹${order.price * order.quantity}
+            <br><br>
+            Thank you for choosing PK Trends! We'd love to hear your feedback.
+          `;
+          break;
+        case "cancelled":
+          emailSubject = "Order Cancelled - PK Trends";
+          statusMessage = `
+            Your order has been successfully cancelled as requested.
+            <br><br>
+            <strong>Order Details:</strong><br>
+            Product: ${order.productId.name}<br>
+            Quantity: ${order.quantity}<br>
+            Total Amount: ₹${order.price * order.quantity}
+            <br><br>
+            If you have any questions about the cancellation, please contact our support team.
+          `;
+          break;
+        default:
+          emailSubject = "Order Status Updated - PK Trends";
+          statusMessage = `
+            Your order status has been updated to: ${status.charAt(0).toUpperCase() + status.slice(1)}
+            <br><br>
+            <strong>Order Details:</strong><br>
+            Product: ${order.productId.name}<br>
+            Quantity: ${order.quantity}<br>
+            Total Amount: ₹${order.price * order.quantity}
+          `;
+      }
+
+      await sendOrderEmail(
+        user.email,
+        userName,
+        order.orderId,
+        emailSubject,
+        statusMessage
+      );
+    }
 
     res.json({
       msg: "Order status updated successfully",
@@ -180,15 +394,68 @@ exports.cancelOrder = async (req, res, next) => {
         .json({ msg: "Only pending orders can be cancelled" });
     }
 
+    const previousStatus = order.status;
     order.status = "cancelled";
     await order.save();
 
+    // Update soldCount if this was a non-cod order that was already counted
+    if (order.paymentMethod !== "cod") {
+      await updateProductSoldCount(order.productId, order.quantity, "decrease");
+    }
+
     await order.populate("productId");
+
+    // Send cancellation email
+    const user = await User.findById(userId);
+    if (user) {
+      const userName = `${user.firstName} ${user.lastName}`;
+      const cancelMessage = `
+        Your order has been successfully cancelled as requested.
+        <br><br>
+        <strong>Order Details:</strong><br>
+        Product: ${order.productId.name}<br>
+        Quantity: ${order.quantity}<br>
+        Total Amount: ₹${order.price * order.quantity}
+        <br><br>
+        If you have any questions about the cancellation or would like to place a new order, please don't hesitate to contact our support team.
+      `;
+
+      await sendOrderEmail(
+        user.email,
+        userName,
+        order.orderId,
+        "Order Cancelled - PK Trends",
+        cancelMessage
+      );
+    }
 
     res.json({
       msg: "Order cancelled successfully",
       order,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update order (address, phone, etc)
+// @route   PATCH /api/orders/:orderId
+// @access  Private
+exports.updateOrder = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+    const update = req.body;
+    // Only allow updating shippingAddress and notes (for safety)
+    const allowedFields = {};
+    if (update.shippingAddress)
+      allowedFields.shippingAddress = update.shippingAddress;
+    if (update.notes) allowedFields.notes = update.notes;
+    // You can add more allowed fields as needed
+    const order = await Order.findByIdAndUpdate(orderId, allowedFields, {
+      new: true,
+    });
+    if (!order) return res.status(404).json({ msg: "Order not found" });
+    res.json({ order });
   } catch (error) {
     next(error);
   }
