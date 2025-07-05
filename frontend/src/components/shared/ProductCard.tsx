@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Product } from "@/data/products";
 import { Button } from "@/components/ui/button";
-import { Heart, Heart as HeartFilled } from "lucide-react";
+import { Heart, Heart as HeartFilled, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "@/components/ui/use-toast";
 import React from "react";
@@ -138,6 +138,13 @@ const ProductCard = ({ product, pId }: ProductCardProps) => {
         {product.originalPrice && (
           <div className="absolute top-3 left-3 bg-black text-white px-2 py-1 text-xs font-medium">
             SALE
+          </div>
+        )}
+        {/* Sold Count Badge */}
+        {product.soldCount && product.soldCount > 0 && (
+          <div className="absolute bottom-3 left-3 bg-green-600 text-white px-2 py-1 text-xs font-medium rounded flex items-center gap-1">
+            <ShoppingBag className="h-3 w-3" />
+            {product.soldCount} sold
           </div>
         )}
       </div>

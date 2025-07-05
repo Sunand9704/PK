@@ -6,6 +6,7 @@ const {
   removeFromWishlist,
 } = require("../controllers/userController");
 const auth = require("../middleware/auth");
+const admin = require("../middleware/admin");
 
 const router = express.Router();
 
@@ -24,5 +25,14 @@ router.get("/wishlist", auth, getWishlist);
 // @route   DELETE /api/user/wishlist
 // @access  Private
 router.delete("/wishlist", auth, removeFromWishlist);
+
+// @route   GET /api/users
+// @access  Private (admin)
+router.get(
+  "/users",
+  // auth,
+  // admin,
+  require("../controllers/userController").getAllUsers
+);
 
 module.exports = router;

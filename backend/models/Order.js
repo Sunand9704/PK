@@ -16,6 +16,29 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    quantity: {
+      type: Number,
+      default: 1,
+    },
+    shippingAddress: {
+      name: String,
+      address: String,
+      city: String,
+      state: String,
+      zip: String,
+      country: String,
+      email: String,
+      phone: String,
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["cod", "razorpay", "card"],
+      default: "cod",
+    },
+    notes: {
+      type: String,
+      default: "",
+    },
     status: {
       type: String,
       enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
@@ -34,8 +57,18 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Defensive: Ensure orderId is set before validation
+orderSchema.pre("validate", function (next) {
+  if (!this.orderId) {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 1000);
+    this.orderId = `ORD-${timestamp}-${random}`;
+  }
+  next();
+});
+
 // Generate unique orderId before saving
-orderSchema.pre("save", async function (next) {
+orderSchema.pre("save", function (next) {
   if (!this.orderId) {
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 1000);
