@@ -13,6 +13,7 @@ export interface Product {
   inStock: boolean;
   rating: number;
   reviews: number;
+  soldCount?: number;
 }
 
 export const mockProducts: Product[] = [
@@ -41,14 +42,14 @@ export const mockProducts: Product[] = [
     inStock: true,
     rating: 4.8,
     reviews: 124,
+    soldCount: 156,
   },
   {
     id: "2",
     name: "Slim Fit Chinos",
     price: 89,
     category: "pants",
-    image:
-      "/placeholder.svg",
+    image: "/placeholder.svg",
     images: [
       "https://images.unsplash.com/photo-1506629905607-e7ff3833d066?w=800&h=800&fit=crop",
       "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=800&h=800&fit=crop",
@@ -61,6 +62,7 @@ export const mockProducts: Product[] = [
     inStock: true,
     rating: 4.6,
     reviews: 89,
+    soldCount: 98,
   },
   {
     id: "3",
@@ -85,6 +87,7 @@ export const mockProducts: Product[] = [
     inStock: true,
     rating: 4.9,
     reviews: 67,
+    soldCount: 203,
   },
   {
     id: "4",
@@ -110,6 +113,7 @@ export const mockProducts: Product[] = [
     inStock: true,
     rating: 4.7,
     reviews: 156,
+    soldCount: 234,
   },
   {
     id: "5",
@@ -136,6 +140,7 @@ export const mockProducts: Product[] = [
     inStock: true,
     rating: 4.5,
     reviews: 102,
+    soldCount: 187,
   },
   {
     id: "6",
@@ -160,6 +165,7 @@ export const mockProducts: Product[] = [
     inStock: true,
     rating: 4.4,
     reviews: 41,
+    soldCount: 76,
   },
   {
     id: "7",
@@ -186,6 +192,7 @@ export const mockProducts: Product[] = [
     inStock: true,
     rating: 4.3,
     reviews: 58,
+    soldCount: 142,
   },
   {
     id: "8",
