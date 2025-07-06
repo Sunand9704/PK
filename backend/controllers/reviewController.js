@@ -16,7 +16,6 @@ exports.addReview = async (req, res, next) => {
       req.user.username ||
       req.user.email ||
       "Anonymous";
-
     // Validate input
     if (!productId || !rating || !review) {
       return res.status(400).json({
@@ -207,6 +206,36 @@ exports.deleteReview = async (req, res, next) => {
       reviews: allReviews.length,
     });
     res.json({ msg: "Review deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all reviews by the authenticated user
+// @route   GET /api/reviews/user
+// @access  Private
+exports.getUserReviews = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    // Find all reviews by this user
+    const reviews = await Review.find({ userId }).sort({ createdAt: -1 });
+    // Populate product name and image
+    const populatedReviews = await Promise.all(
+      reviews.map(async (review) => {
+        const product = await Product.findById(review.productId).select("name images");
+        return {
+          _id: review._id,
+          productId: review.productId,
+          productName: product ? product.name : "",
+          productImage: product && product.images && product.images.length > 0 ? product.images[0] : "",
+          rating: review.rating,
+          review: review.review,
+          createdAt: review.createdAt,
+          updatedAt: review.updatedAt,
+        };
+      })
+    );
+    res.json({ reviews: populatedReviews });
   } catch (error) {
     next(error);
   }
