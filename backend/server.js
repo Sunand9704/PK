@@ -16,6 +16,8 @@ const categoriesRoute = require("./routes/categories");
 const reviewRoutes = require("./routes/reviews");
 const orderRoutes = require("./routes/orders");
 const dashboardRoutes = require("./routes/dashboard");
+const passport = require("passport");
+const session = require("express-session");
 
 // Load env vars
 dotenv.config();
@@ -30,6 +32,15 @@ app.use(helmet());
 app.use(cors({ origin: "*" || true, credentials: true }));
 app.use(express.json());
 app.use(morgan("dev"));
+
+// Add session and passport middleware for Google OAuth
+app.use(session({
+  secret: "pktrendsgoogleoauthsecret",
+  resave: false,
+  saveUninitialized: false,
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Routes
 app.use("/api/auth", authRoutes);
