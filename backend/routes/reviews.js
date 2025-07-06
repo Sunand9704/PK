@@ -12,6 +12,7 @@ router.patch("/:reviewId", auth, reviewController.editReview);
 router.delete("/:reviewId", auth, reviewController.deleteReview);
 
 // Public routes
+router.get("/top", reviewController.getTopReviews);
 router.get("/:productId", reviewController.getProductReviews);
 
 module.exports = router;

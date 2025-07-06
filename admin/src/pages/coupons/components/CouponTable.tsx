@@ -1,9 +1,8 @@
-
-import React from 'react';
-import { Edit, Trash2, Copy } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import React from "react";
+import { Edit, Trash2, Copy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -11,42 +10,42 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 
 // Mock data
 const coupons = [
   {
     id: 1,
-    code: 'SAVE20',
-    description: '20% off on all products',
+    code: "SAVE20",
+    description: "20% off on all products",
     discount: 20,
-    type: 'percentage',
-    status: 'active',
+    type: "percentage",
+    status: "active",
     usageCount: 45,
     usageLimit: 100,
-    expiryDate: '2024-03-31'
+    expiryDate: "2024-03-31",
   },
   {
     id: 2,
-    code: 'FLAT50',
-    description: '$50 off on orders above $200',
+    code: "FLAT50",
+    description: "₹50 off on orders above ₹200",
     discount: 50,
-    type: 'fixed',
-    status: 'active',
+    type: "fixed",
+    status: "active",
     usageCount: 23,
     usageLimit: 50,
-    expiryDate: '2024-02-28'
+    expiryDate: "2024-02-28",
   },
   {
     id: 3,
-    code: 'WELCOME10',
-    description: '10% off for new customers',
+    code: "WELCOME10",
+    description: "10% off for new customers",
     discount: 10,
-    type: 'percentage',
-    status: 'expired',
+    type: "percentage",
+    status: "expired",
     usageCount: 156,
     usageLimit: 200,
-    expiryDate: '2024-01-31'
+    expiryDate: "2024-01-31",
   },
 ];
 
@@ -59,18 +58,19 @@ export const CouponTable: React.FC<CouponTableProps> = ({
   searchTerm,
   onEditCoupon,
 }) => {
-  const filteredCoupons = coupons.filter(coupon =>
-    coupon.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    coupon.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCoupons = coupons.filter(
+    (coupon) =>
+      coupon.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      coupon.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'active':
+      case "active":
         return <Badge className="bg-green-100 text-green-800">Active</Badge>;
-      case 'expired':
+      case "expired":
         return <Badge className="bg-red-100 text-red-800">Expired</Badge>;
-      case 'disabled':
+      case "disabled":
         return <Badge className="bg-gray-100 text-gray-800">Disabled</Badge>;
       default:
         return <Badge variant="secondary">Unknown</Badge>;
@@ -78,7 +78,7 @@ export const CouponTable: React.FC<CouponTableProps> = ({
   };
 
   const formatDiscount = (discount: number, type: string) => {
-    return type === 'percentage' ? `${discount}%` : `$${discount}`;
+    return type === "percentage" ? `${discount}%` : `₹${discount}`;
   };
 
   return (
@@ -129,7 +129,11 @@ export const CouponTable: React.FC<CouponTableProps> = ({
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-600 hover:text-red-700"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>

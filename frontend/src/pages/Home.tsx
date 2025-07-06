@@ -34,19 +34,30 @@ const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const Home = () => {
   const [products, setProducts] = useState([]);
-  // No categories API, use static categories only
+  const [categories, setCategories] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
-        const productsRes = await fetch(`${baseUrl}/api/products`).then((res) =>
-          res.json()
-        );
+        const [productsRes, categoriesRes, reviewsRes] = await Promise.all([
+          fetch(`${baseUrl}/api/products`).then((res) => res.json()),
+          fetch(`${baseUrl}/api/categories/with-top-products`).then((res) =>
+            res.json()
+          ),
+          fetch(`${baseUrl}/api/reviews/top`).then((res) => res.json()),
+        ]);
+
         setProducts(productsRes.products || []);
+        setCategories(categoriesRes.categories || fallbackCategories);
+        setReviews(reviewsRes.reviews || []);
       } catch (err) {
+        console.error("Error fetching data:", err);
         setProducts([]);
+        setCategories(fallbackCategories);
+        setReviews([]);
       } finally {
         setLoading(false);
       }
@@ -55,7 +66,7 @@ const Home = () => {
   }, []);
 
   const featuredProducts = products.slice(0, 4);
-  const cats = fallbackCategories;
+  const cats = categories;
 
   if (loading) {
     return (
@@ -117,9 +128,10 @@ const Home = () => {
       <section className="py-12">
         <div className="container mx-auto px-4 grid gap-16">
           {cats.map((category) => {
-            // Filter products for this category
+            // Filter products for this category and sort by soldCount (highest first)
             const categoryProducts = products
               .filter((product) => product.category === category.id)
+              .sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0))
               .slice(0, 4);
             return (
               <div
@@ -131,15 +143,17 @@ const Home = () => {
                   {category.name}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-6">
-                  {categoryProducts.map((product) => (
-                    <>
-                      
-                      <ProductCard
-                        key={product._id}
-                        product={product}
-                        pId={product._id}
-                      />
-                    </>
+                  {categoryProducts.map((product, idx) => (
+                    <div
+                      key={product._id}
+                      className={
+                        idx > 1
+                          ? "hidden md:block" // Only show 3rd/4th on md+
+                          : "block"
+                      }
+                    >
+                      <ProductCard product={product} pId={product._id} />
+                    </div>
                   ))}
                 </div>
                 <div className="text-center">
@@ -156,7 +170,7 @@ const Home = () => {
       </section>
 
       {/* Featured Products */}
-      <section className="py-16">
+      {/* <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-12">
             <div>
@@ -184,7 +198,7 @@ const Home = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Testimonials */}
       <section className="py-16 bg-gray-50">
@@ -199,43 +213,33 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                name: "David Miller",
-                review:
-                  "Outstanding quality and perfect fit. The attention to detail is remarkable.",
-                rating: 5,
-              },
-              {
-                name: "James Wilson",
-                review:
-                  "Fast shipping and excellent customer service. Will definitely order again.",
-                rating: 5,
-              },
-              {
-                name: "Michael Brown",
-                review:
-                  "Premium materials and craftsmanship. Worth every penny.",
-                rating: 5,
-              },
-            ].map((testimonial, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="flex items-center mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <span key={i} className="text-yellow-400">
-                      ★
-                    </span>
-                  ))}
-                </div>
-                <p className="text-gray-600 mb-4">"{testimonial.review}"</p>
-                <p className="font-semibold">{testimonial.name}</p>
+            {reviews.length === 0 ? (
+              <div className="col-span-3 text-center text-gray-500">
+                No reviews yet.
               </div>
-            ))}
+            ) : (
+              reviews.map((testimonial, index) => (
+                <div
+                  key={testimonial._id || index}
+                  className="bg-white p-6 rounded-lg shadow-sm"
+                >
+                  <div className="flex items-center mb-4">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <span key={i} className="text-yellow-400">
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-gray-600 mb-4">"{testimonial.review}"</p>
+                  <p className="font-semibold">{testimonial.userName}</p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </section>
 
-      {/* Newsletter */}
+      {/* Newsletter
       <section className="py-16 bg-black text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Stay Updated</h2>
@@ -255,7 +259,7 @@ const Home = () => {
             </Button>
           </div>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 };
