@@ -1,8 +1,4 @@
-import React from "react";
-import { Edit, Trash2, Copy } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+
 import {
   Table,
   TableBody,
