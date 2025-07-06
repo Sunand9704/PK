@@ -16,8 +16,7 @@ const categoriesRoute = require("./routes/categories");
 const reviewRoutes = require("./routes/reviews");
 const orderRoutes = require("./routes/orders");
 const dashboardRoutes = require("./routes/dashboard");
-const notificationRoutes = require("./routes/notifications");
-const contactRoutes = require("./routes/contact");
+
 
 // Load env vars
 dotenv.config();
