@@ -21,6 +21,7 @@ const couponsRoutes = require("./routes/coupons");
 const notificationRoutes = require("./routes/notifications");
 const contactRoutes = require("./routes/contact");
 
+
 // Load env vars
 dotenv.config();
 
@@ -48,6 +49,8 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/admin/coupons", adminCouponsRoutes);
 app.use("/api/coupons", couponsRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/contact", contactRoutes);
 
 // Error Handler
 app.use(errorHandler);
