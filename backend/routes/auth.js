@@ -17,8 +17,8 @@ const refreshGoogleToken = async (refreshToken) => {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        client_id: "801989829243-jur20qvmld2se94mpj24hlvh4ntfcoti.apps.googleusercontent.com",
+        client_secret: "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",
         refresh_token: refreshToken,
         grant_type: 'refresh_token',
       }),
@@ -87,13 +87,13 @@ router.post("/verify-otp", verifyOtp);
 // @route   POST /api/auth/reset-password
 router.post("/reset-password", resetPassword);
 
-// Google OAuth config
+// Google OAuth config (directly in code as requested)
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL,
+      clientID: "801989829243-jur20qvmld2se94mpj24hlvh4ntfcoti.apps.googleusercontent.com",
+      clientSecret: "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",
+      callbackURL: "http://localhost:8000/api/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -161,7 +161,7 @@ router.get(
       }
       // Generate JWT and redirect or respond
       const token = generateToken(user._id);
-      res.redirect(`${process.env.FRONTEND_URL}?token=${token}`);
+      res.redirect(`http://localhost:8080?token=${token}`);
     })(req, res, next);
   }
 );
