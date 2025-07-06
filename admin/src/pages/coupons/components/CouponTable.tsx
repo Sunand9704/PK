@@ -17,8 +17,7 @@ export const CouponTable: React.FC<CouponTableProps> = ({
   searchTerm,
   onEditCoupon,
 }) => {
-  
-    return type === "percentage" ? `${discount}%` : `₹${discount}`;
+
   };
 
   return (
