@@ -1,22 +1,24 @@
 
+import React, { useState, useEffect } from "react";
+
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 interface CouponModalProps {
   isOpen: boolean;
@@ -30,42 +32,43 @@ export const CouponModal: React.FC<CouponModalProps> = ({
   coupon,
 }) => {
   const [formData, setFormData] = useState({
-    code: '',
-    description: '',
-    discount: '',
-    type: 'percentage',
-    usageLimit: '',
-    expiryDate: '',
-    minOrderAmount: '',
+    code: "",
+    description: "",
+    discount: "",
+    type: "percentage",
+    usageLimit: "",
+    expiryDate: "",
+    minOrderAmount: "",
   });
   const { toast } = useToast();
 
   useEffect(() => {
     if (coupon) {
       setFormData({
-        code: coupon.code || '',
-        description: coupon.description || '',
-        discount: coupon.discount?.toString() || '',
-        type: coupon.type || 'percentage',
-        usageLimit: coupon.usageLimit?.toString() || '',
-        expiryDate: coupon.expiryDate || '',
-        minOrderAmount: coupon.minOrderAmount?.toString() || '',
+        code: coupon.code || "",
+        description: coupon.description || "",
+        discount: coupon.discount?.toString() || "",
+        type: coupon.type || "percentage",
+        usageLimit: coupon.usageLimit?.toString() || "",
+        expiryDate: coupon.expiryDate || "",
+        minOrderAmount: coupon.minOrderAmount?.toString() || "",
       });
     } else {
       setFormData({
-        code: '',
-        description: '',
-        discount: '',
-        type: 'percentage',
-        usageLimit: '',
-        expiryDate: '',
-        minOrderAmount: '',
+        code: "",
+        description: "",
+        discount: "",
+        type: "percentage",
+        usageLimit: "",
+        expiryDate: "",
+        minOrderAmount: "",
       });
     }
   }, [coupon]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     const token = localStorage.getItem('token');
     const payload = {
       code: formData.code,
@@ -102,10 +105,11 @@ export const CouponModal: React.FC<CouponModalProps> = ({
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
+
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -113,7 +117,7 @@ export const CouponModal: React.FC<CouponModalProps> = ({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {coupon ? 'Edit Coupon' : 'Create New Coupon'}
+            {coupon ? "Edit Coupon" : "Create New Coupon"}
           </DialogTitle>
         </DialogHeader>
 
@@ -124,7 +128,9 @@ export const CouponModal: React.FC<CouponModalProps> = ({
               <Input
                 id="code"
                 value={formData.code}
-                onChange={(e) => handleInputChange('code', e.target.value.toUpperCase())}
+                onChange={(e) =>
+                  handleInputChange("code", e.target.value.toUpperCase())
+                }
                 placeholder="SAVE20"
                 required
               />
@@ -134,7 +140,7 @@ export const CouponModal: React.FC<CouponModalProps> = ({
               <Label htmlFor="type">Discount Type</Label>
               <Select
                 value={formData.type}
-                onValueChange={(value) => handleInputChange('type', value)}
+                onValueChange={(value) => handleInputChange("type", value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
@@ -148,14 +154,14 @@ export const CouponModal: React.FC<CouponModalProps> = ({
 
             <div className="space-y-2">
               <Label htmlFor="discount">
-                Discount Value {formData.type === 'percentage' ? '(%)' : '($)'}
+                Discount Value {formData.type === "percentage" ? "(%)" : "(₹)"}
               </Label>
               <Input
                 id="discount"
                 type="number"
                 value={formData.discount}
-                onChange={(e) => handleInputChange('discount', e.target.value)}
-                placeholder={formData.type === 'percentage' ? '20' : '50'}
+                onChange={(e) => handleInputChange("discount", e.target.value)}
+                placeholder={formData.type === "percentage" ? "20" : "50"}
                 required
               />
             </div>
@@ -166,19 +172,23 @@ export const CouponModal: React.FC<CouponModalProps> = ({
                 id="usageLimit"
                 type="number"
                 value={formData.usageLimit}
-                onChange={(e) => handleInputChange('usageLimit', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("usageLimit", e.target.value)
+                }
                 placeholder="100"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="minOrderAmount">Minimum Order Amount ($)</Label>
+              <Label htmlFor="minOrderAmount">Minimum Order Amount (₹)</Label>
               <Input
                 id="minOrderAmount"
                 type="number"
                 step="0.01"
                 value={formData.minOrderAmount}
-                onChange={(e) => handleInputChange('minOrderAmount', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("minOrderAmount", e.target.value)
+                }
                 placeholder="0.00"
               />
             </div>
@@ -189,7 +199,9 @@ export const CouponModal: React.FC<CouponModalProps> = ({
                 id="expiryDate"
                 type="date"
                 value={formData.expiryDate}
-                onChange={(e) => handleInputChange('expiryDate', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("expiryDate", e.target.value)
+                }
                 required
               />
             </div>
@@ -200,7 +212,7 @@ export const CouponModal: React.FC<CouponModalProps> = ({
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
+              onChange={(e) => handleInputChange("description", e.target.value)}
               placeholder="Coupon description..."
               rows={3}
             />
@@ -214,7 +226,7 @@ export const CouponModal: React.FC<CouponModalProps> = ({
               type="submit"
               className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
             >
-              {coupon ? 'Update Coupon' : 'Create Coupon'}
+              {coupon ? "Update Coupon" : "Create Coupon"}
             </Button>
           </div>
         </form>

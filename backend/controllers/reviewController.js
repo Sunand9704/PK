@@ -222,12 +222,17 @@ exports.getUserReviews = async (req, res, next) => {
     // Populate product name and image
     const populatedReviews = await Promise.all(
       reviews.map(async (review) => {
-        const product = await Product.findById(review.productId).select("name images");
+        const product = await Product.findById(review.productId).select(
+          "name images"
+        );
         return {
           _id: review._id,
           productId: review.productId,
           productName: product ? product.name : "",
-          productImage: product && product.images && product.images.length > 0 ? product.images[0] : "",
+          productImage:
+            product && product.images && product.images.length > 0
+              ? product.images[0]
+              : "",
           rating: review.rating,
           review: review.review,
           createdAt: review.createdAt,
@@ -236,6 +241,36 @@ exports.getUserReviews = async (req, res, next) => {
       })
     );
     res.json({ reviews: populatedReviews });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get top 3 reviews across all products
+// @route   GET /api/reviews/top
+// @access  Public
+exports.getTopReviews = async (req, res, next) => {
+  try {
+    const reviews = await Review.aggregate([
+      {
+        $addFields: {
+          reviewLength: { $strLenCP: "$review" },
+        },
+      },
+      {
+        $sort: { rating: -1, reviewLength: -1 },
+      },
+      { $limit: 3 },
+      {
+        $project: {
+          userName: 1,
+          rating: 1,
+          review: 1,
+          createdAt: 1,
+        },
+      },
+    ]);
+    res.json({ reviews });
   } catch (error) {
     next(error);
   }

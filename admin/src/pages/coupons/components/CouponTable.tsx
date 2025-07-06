@@ -1,8 +1,10 @@
+
 import React, { useEffect, useState } from 'react';
 import { Edit, Trash2, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+
 import {
   Table,
   TableBody,
@@ -10,8 +12,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+
 
 interface CouponTableProps {
   searchTerm: string;
@@ -22,6 +26,7 @@ export const CouponTable: React.FC<CouponTableProps> = ({
   searchTerm,
   onEditCoupon,
 }) => {
+
   const [coupons, setCoupons] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -78,11 +83,13 @@ export const CouponTable: React.FC<CouponTableProps> = ({
 
   const formatDiscount = (discount: number, type: string) => {
     return type === 'percentage' ? `${discount}%` : `₹${discount}`;
+
   };
 
   return (
     <Card>
       <CardContent className="p-0">
+
         {loading ? (
           <div className="p-6 text-center text-gray-500">Loading coupons...</div>
         ) : error ? (
@@ -98,6 +105,7 @@ export const CouponTable: React.FC<CouponTableProps> = ({
                 <TableHead>Status</TableHead>
                 <TableHead>Expiry</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
+
               </TableRow>
             </TableHeader>
             <TableBody>

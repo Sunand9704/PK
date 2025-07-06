@@ -129,6 +129,26 @@ exports.createOrder = async (req, res, next) => {
 
     await order.save();
 
+    // Create notification for new order
+    try {
+      const Notification = require("../models/Notification");
+      await Notification.create({
+        type: "new_order",
+        title: "New Order Received",
+        message: `Order #${order.orderId} placed by ${user.firstName} ${user.lastName}`,
+        priority: "high",
+        relatedId: order._id,
+        relatedModel: "Order",
+        metadata: {
+          orderId: order.orderId,
+          productName: product.name,
+          amount: price * quantity,
+        },
+      });
+    } catch (error) {
+      console.error("Error creating notification:", error);
+    }
+
     // Update product soldCount for successful orders (non-cod orders are considered successful immediately)
     if (paymentMethod !== "cod") {
       await updateProductSoldCount(productId, quantity, "increase");
@@ -278,6 +298,26 @@ exports.updateOrderStatus = async (req, res, next) => {
     const previousStatus = order.status;
     order.status = status;
     await order.save();
+
+    // Create notification for order status update
+    try {
+      const Notification = require("../models/Notification");
+      await Notification.create({
+        type: "order_status",
+        title: "Order Status Updated",
+        message: `Order #${order.orderId} status changed to ${status}`,
+        priority: "medium",
+        relatedId: order._id,
+        relatedModel: "Order",
+        metadata: {
+          orderId: order.orderId,
+          previousStatus,
+          newStatus: status,
+        },
+      });
+    } catch (error) {
+      console.error("Error creating notification:", error);
+    }
 
     // Handle soldCount updates based on status changes
     if (previousStatus !== "cancelled" && status === "cancelled") {

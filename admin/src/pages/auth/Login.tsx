@@ -8,6 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -16,6 +24,18 @@ export const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login, user, error, clearError } = useAuth();
   const { toast } = useToast();
+
+  // Forgot password states
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1); // 1=email, 2=otp, 3=new password
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotOtp, setForgotOtp] = useState("");
+  const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState("");
+  const [forgotSuccess, setForgotSuccess] = useState("");
+  const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
   if (user) {
     return <Navigate to="/dashboard" replace />;
@@ -38,6 +58,92 @@ export const Login: React.FC = () => {
       console.error("Login error:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Step 1: Submit email
+  const handleForgotEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError("");
+    setForgotSuccess("");
+    setForgotLoading(true);
+    try {
+      const res = await fetch(`${baseUrl}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setForgotSuccess("OTP sent to your email!");
+        setForgotStep(2);
+      } else {
+        setForgotError(data.message || "User not found");
+      }
+    } catch (err) {
+      setForgotError("Network error");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  // Step 2: Submit OTP
+  const handleForgotOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError("");
+    setForgotSuccess("");
+    setForgotLoading(true);
+    try {
+      const res = await fetch(`${baseUrl}/api/auth/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail, otp: forgotOtp }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setForgotSuccess("OTP verified!");
+        setForgotStep(3);
+      } else {
+        setForgotError(data.message || "Invalid OTP");
+      }
+    } catch (err) {
+      setForgotError("Network error");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  // Step 3: Submit new password
+  const handleForgotReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError("");
+    setForgotSuccess("");
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      setForgotError("Passwords do not match");
+      return;
+    }
+    setForgotLoading(true);
+    try {
+      const res = await fetch(`${baseUrl}/api/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: forgotEmail,
+          otp: forgotOtp,
+          password: forgotNewPassword,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setForgotSuccess("Password reset successful! You can now sign in.");
+        setTimeout(() => setForgotOpen(false), 1200);
+      } else {
+        setForgotError(data.message || "Failed to reset password");
+      }
+    } catch (err) {
+      setForgotError("Network error");
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -149,6 +255,24 @@ export const Login: React.FC = () => {
                 )}
               </Button>
             </div>
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => {
+                  setForgotOpen(true);
+                  setForgotStep(1);
+                  setForgotEmail("");
+                  setForgotOtp("");
+                  setForgotNewPassword("");
+                  setForgotConfirmPassword("");
+                  setForgotError("");
+                  setForgotSuccess("");
+                }}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Forgot password?
+              </button>
+            </div>
           </div>
 
           <Button
@@ -177,11 +301,95 @@ export const Login: React.FC = () => {
           </a>
         </div>
 
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600">Demo credentials:</p>
-          <p className="text-sm font-mono">admin@pktrends.com / admin123</p>
-        </div>
+        
       </motion.div>
+
+      {/* Forgot Password Dialog */}
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Forgot Password</DialogTitle>
+            <DialogDescription>
+              {forgotStep === 1 && "Enter your email to receive an OTP."}
+              {forgotStep === 2 && "Enter the OTP sent to your email."}
+              {forgotStep === 3 && "Enter your new password."}
+            </DialogDescription>
+          </DialogHeader>
+          {forgotStep === 1 && (
+            <form onSubmit={handleForgotEmail} className="space-y-4">
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                required
+              />
+              {forgotError && (
+                <div className="text-red-500 text-sm">{forgotError}</div>
+              )}
+              {forgotSuccess && (
+                <div className="text-green-600 text-sm">{forgotSuccess}</div>
+              )}
+              <DialogFooter>
+                <Button type="submit" disabled={forgotLoading}>
+                  {forgotLoading ? "Sending..." : "Send OTP"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+          {forgotStep === 2 && (
+            <form onSubmit={handleForgotOtp} className="space-y-4">
+              <Input
+                type="text"
+                placeholder="Enter OTP"
+                value={forgotOtp}
+                onChange={(e) => setForgotOtp(e.target.value)}
+                required
+              />
+              {forgotError && (
+                <div className="text-red-500 text-sm">{forgotError}</div>
+              )}
+              {forgotSuccess && (
+                <div className="text-green-600 text-sm">{forgotSuccess}</div>
+              )}
+              <DialogFooter>
+                <Button type="submit" disabled={forgotLoading}>
+                  {forgotLoading ? "Verifying..." : "Verify OTP"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+          {forgotStep === 3 && (
+            <form onSubmit={handleForgotReset} className="space-y-4">
+              <Input
+                type="password"
+                placeholder="New password"
+                value={forgotNewPassword}
+                onChange={(e) => setForgotNewPassword(e.target.value)}
+                required
+              />
+              <Input
+                type="password"
+                placeholder="Confirm new password"
+                value={forgotConfirmPassword}
+                onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                required
+              />
+              {forgotError && (
+                <div className="text-red-500 text-sm">{forgotError}</div>
+              )}
+              {forgotSuccess && (
+                <div className="text-green-600 text-sm">{forgotSuccess}</div>
+              )}
+              <DialogFooter>
+                <Button type="submit" disabled={forgotLoading}>
+                  {forgotLoading ? "Resetting..." : "Reset Password"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
