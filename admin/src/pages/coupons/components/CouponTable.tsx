@@ -23,34 +23,8 @@ export const CouponTable: React.FC<CouponTableProps> = ({
   return (
     <Card>
       <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Code</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Discount</TableHead>
-              <TableHead>Usage</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Expiry</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredCoupons.map((coupon) => (
-              <TableRow key={coupon.id}>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <code className="px-2 py-1 bg-gray-100 rounded text-sm font-mono">
-                      {coupon.code}
-                    </code>
-                  </div>
-                </TableCell>
-                <TableCell>{coupon.description}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">
-                    {formatDiscount(coupon.discount, coupon.type)}
-                  </Badge>
-                </TableCell>
+        
+
                 <TableCell>
                   {coupon.usageCount}/{coupon.usageLimit}
                 </TableCell>
