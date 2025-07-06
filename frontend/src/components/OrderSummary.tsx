@@ -249,23 +249,23 @@ const OrderSummary = ({
       <div className="space-y-3">
         <div className="flex justify-between text-gray-600">
           <span>Subtotal</span>
-          <span>${subtotal.toFixed(2)}</span>
+          <span>₹{subtotal.toFixed(2)}</span>
         </div>
 
         <div className="flex justify-between text-gray-600">
           <span>Shipping</span>
-          <span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
+          <span>{shipping === 0 ? "Free" : `₹${shipping.toFixed(2)}`}</span>
         </div>
 
         <div className="flex justify-between text-gray-600">
           <span>Tax</span>
-          <span>${tax.toFixed(2)}</span>
+          <span>₹{tax.toFixed(2)}</span>
         </div>
 
         {promoApplied && (
           <div className="flex justify-between text-green-600">
             <span>Discount (10%)</span>
-            <span>-${discount.toFixed(2)}</span>
+            <span>-₹{discount.toFixed(2)}</span>
           </div>
         )}
 
@@ -273,7 +273,7 @@ const OrderSummary = ({
 
         <div className="flex justify-between text-xl font-bold text-black">
           <span>Total</span>
-          <span>${finalTotal.toFixed(2)}</span>
+          <span>₹{finalTotal.toFixed(2)}</span>
         </div>
       </div>
 

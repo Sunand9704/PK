@@ -407,7 +407,7 @@ const Orders: React.FC = () => {
                 </div>
               </div>
               <div className="text-left md:text-right">
-                <div className="font-bold text-lg">${order.price}</div>
+                <div className="font-bold text-lg">₹{order.price}</div>
                 <span
                   className={`inline-block px-2 py-1 text-xs rounded ${getStatusColor(order.status)}`}
                 >

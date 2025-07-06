@@ -1,6 +1,6 @@
-import React from 'react';
-import { Minus, Plus, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { Minus, Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface CartItemProps {
   item: {
@@ -23,8 +23,8 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }: CartItemProps) => {
         {/* Product Image */}
         <div className="flex-shrink-0">
           <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden">
-            <img 
-              src={item.image} 
+            <img
+              src={item.image}
               alt={item.name}
               className="w-full h-full object-cover"
             />
@@ -35,11 +35,16 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }: CartItemProps) => {
         <div className="flex-1 min-w-0">
           <h3 className="text-lg font-semibold text-black mb-2">{item.name}</h3>
           <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-3">
-            <span>Color: <span className="font-medium text-black">{item.color}</span></span>
-            <span>Size: <span className="font-medium text-black">{item.size}</span></span>
+            <span>
+              Color:{" "}
+              <span className="font-medium text-black">{item.color}</span>
+            </span>
+            <span>
+              Size: <span className="font-medium text-black">{item.size}</span>
+            </span>
           </div>
           <div className="text-xl font-bold text-black">
-            ${item.price.toFixed(2)}
+            ₹{item.price.toFixed(2)}
           </div>
         </div>
 
@@ -66,7 +71,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }: CartItemProps) => {
               <Plus className="w-4 h-4" />
             </Button>
           </div>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -80,7 +85,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }: CartItemProps) => {
         {/* Item Total */}
         <div className="text-right">
           <div className="text-xl font-bold text-black">
-            ${(item.price * item.quantity).toFixed(2)}
+            ₹{(item.price * item.quantity).toFixed(2)}
           </div>
         </div>
       </div>
@@ -88,4 +93,4 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }: CartItemProps) => {
   );
 };
 
-export default CartItem; 
+export default CartItem;

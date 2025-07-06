@@ -36,6 +36,7 @@ interface Order {
   quantity: number;
   price: number;
   productId: any;
+  paymentMethod: string;
 }
 
 const STATUS_OPTIONS = [
@@ -252,7 +253,12 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                     )}
                   </TableCell>
                   <TableCell>{order.quantity}</TableCell>
-                  <TableCell>${order.price?.toFixed(2)}</TableCell>
+                  <TableCell>
+                    ${order.price?.toFixed(2)} <br />
+                    <span className="text-xs text-gray-500">
+                      {order.paymentMethod}
+                    </span>
+                  </TableCell>
                 </TableRow>
               ))
             )}

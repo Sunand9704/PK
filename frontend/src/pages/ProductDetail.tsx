@@ -39,6 +39,10 @@ const ProductDetail = () => {
   const [editReviewText, setEditReviewText] = useState("");
   const [editReviewRating, setEditReviewRating] = useState(0);
 
+  // Image gallery state
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [imageError, setImageError] = useState(false);
+
   // Buy Now functionality states
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -60,6 +64,9 @@ const ProductDetail = () => {
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
   const [orderLoading, setOrderLoading] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+
+  const imgPlaceholderUrl =
+    "https://res.cloudinary.com/dk6rrrwum/image/upload/v1751738007/placeholder_szfmym.svg";
 
   useEffect(() => {
     async function fetchProduct() {
@@ -120,6 +127,25 @@ const ProductDetail = () => {
     }
     if (id) fetchProduct();
   }, [id, isAuthenticated, token]);
+
+  // Handle image selection
+  const handleImageSelect = (index: number) => {
+    setSelectedImageIndex(index);
+    setImageError(false);
+  };
+
+  // Handle main image error
+  const handleMainImageError = () => {
+    setImageError(true);
+  };
+
+  // Get current image source
+  const getCurrentImageSrc = () => {
+    if (imageError || !product?.images || product.images.length === 0) {
+      return imgPlaceholderUrl;
+    }
+    return product.images[selectedImageIndex] || product.images[0];
+  };
 
   // Buy Now functions
   const handleBlur = (field: string) =>
@@ -291,27 +317,39 @@ const ProductDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
           {/* Images */}
           <div className="space-y-4">
-            <div className="aspect-square bg-gray-100">
+            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
               <img
-                src={product.images[0]}
+                src={getCurrentImageSrc()}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-all duration-300"
+                onError={handleMainImageError}
               />
             </div>
-            <div className="grid grid-cols-4 gap-2">
-              {product.images.map((image, index) => (
-                <div
-                  key={index}
-                  className="aspect-square bg-gray-100 cursor-pointer"
-                >
-                  <img
-                    src={image}
-                    alt={`${product.name} ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-            </div>
+            {product.images && product.images.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {product.images.map((image, index) => (
+                  <div
+                    key={index}
+                    className={`aspect-square bg-gray-100 cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                      selectedImageIndex === index
+                        ? "border-black ring-2 ring-black/20"
+                        : "border-transparent hover:border-gray-300"
+                    }`}
+                    onClick={() => handleImageSelect(index)}
+                  >
+                    <img
+                      src={image}
+                      alt={`${product.name} ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = imgPlaceholderUrl;
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
@@ -320,10 +358,10 @@ const ProductDetail = () => {
               <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
               <div className="flex items-center space-x-4 mb-4">
                 <div className="flex items-center space-x-2">
-                  <span className="text-2xl font-bold">${product.price}</span>
+                  <span className="text-2xl font-bold">₹{product.price}</span>
                   {product.originalPrice && (
                     <span className="text-lg text-gray-500 line-through">
-                      ${product.originalPrice}
+                      ₹{product.originalPrice}
                     </span>
                   )}
                 </div>
@@ -446,7 +484,7 @@ const ProductDetail = () => {
                     <h3 className="font-semibold mb-3">Order Summary</h3>
                     <div className="flex items-center space-x-4 mb-3">
                       <img
-                        src={product.images[0]}
+                        src={getCurrentImageSrc()}
                         alt={product.name}
                         className="w-16 h-16 object-cover rounded"
                       />
@@ -461,14 +499,14 @@ const ProductDetail = () => {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold">
-                          ${product.price * quantity}
+                          ₹{product.price * quantity}
                         </p>
                       </div>
                     </div>
                     <Separator className="my-3" />
                     <div className="flex justify-between font-semibold">
                       <span>Total</span>
-                      <span>${product.price * quantity}</span>
+                      <span>₹{product.price * quantity}</span>
                     </div>
                   </div>
 
