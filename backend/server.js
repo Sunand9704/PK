@@ -43,8 +43,7 @@ app.use("/api/admin/products", adminProductsRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/contact", contactRoutes);
+
 
 // Error Handler
 app.use(errorHandler);
