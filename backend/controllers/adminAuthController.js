@@ -11,7 +11,6 @@ exports.registerAdmin = async (req, res, next) => {
   //   return res.status(400).json({ errors: errors.array() });
   // }
   const { name, email, password } = req.body;
-  console.log(name, email, password);
   
   try {
     let admin = await Admin.findOne({ email });
@@ -38,16 +37,13 @@ exports.loginAdmin = async (req, res, next) => {
   //   return res.status(400).json({ errors: errors.array() });
   // }
   const { email, password } = req.body;
-  console.log(email, password);
   
   try {
     const admin = await Admin.findOne({ email });
-    console.log(admin);
     if (!admin) {
       return res.status(400).json({ errors: [{ msg: "Invalid credentials" }] });
     }
     const isMatch = await admin.matchPassword(password);
-    console.log(isMatch);
     if (!isMatch) {
       return res.status(400).json({ errors: [{ msg: "Invalid credentials" }] });
     }
