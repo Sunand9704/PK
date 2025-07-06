@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -65,17 +64,44 @@ export const CouponModal: React.FC<CouponModalProps> = ({
     }
   }, [coupon]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: coupon ? "Coupon updated" : "Coupon created",
-        description: `${formData.code} has been ${coupon ? 'updated' : 'created'} successfully.`,
-      });
+    const token = localStorage.getItem('token');
+    const payload = {
+      code: formData.code,
+      description: formData.description,
+      discountValue: Number(formData.discount),
+      discountType: formData.type,
+      usageLimit: formData.usageLimit ? Number(formData.usageLimit) : undefined,
+      expiryDate: formData.expiryDate,
+      minOrderValue: formData.minOrderAmount ? Number(formData.minOrderAmount) : 0,
+      active: true,
+    };
+    try {
+      let res, data;
+      if (coupon && coupon._id) {
+        res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/admin/coupons/${coupon._id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(payload),
+        });
+        data = await res.json();
+        if (!res.ok) throw new Error(data.msg || 'Failed to update coupon');
+        toast({ title: 'Coupon updated', description: `${formData.code} has been updated successfully.` });
+      } else {
+        res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/admin/coupons`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(payload),
+        });
+        data = await res.json();
+        if (!res.ok) throw new Error(data.msg || 'Failed to create coupon');
+        toast({ title: 'Coupon created', description: `${formData.code} has been created successfully.` });
+      }
       onClose();
-    }, 1000);
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {

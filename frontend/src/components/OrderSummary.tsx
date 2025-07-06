@@ -55,6 +55,12 @@ const OrderSummary = ({
   const [paymentMethod, setPaymentMethod] = React.useState("razorpay");
   const [paymentDialogOpen, setPaymentDialogOpen] = React.useState(false);
   const [orderLoading, setOrderLoading] = React.useState(false);
+  const [couponCode, setCouponCode] = React.useState("");
+  const [couponApplied, setCouponApplied] = React.useState(false);
+  const [couponError, setCouponError] = React.useState("");
+  const [couponSuccess, setCouponSuccess] = React.useState("");
+  const [couponDiscount, setCouponDiscount] = React.useState(0);
+  const [appliedCoupon, setAppliedCoupon] = React.useState<any>(null);
 
   const applyPromoCode = () => {
     if (promoCode.toLowerCase() === "save10") {
@@ -62,8 +68,53 @@ const OrderSummary = ({
     }
   };
 
+  const applyCoupon = async () => {
+    setCouponError("");
+    setCouponSuccess("");
+    if (!couponCode) {
+      setCouponError("Please enter a coupon code.");
+      return;
+    }
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/coupons/apply`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code: couponCode, orderValue: total }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setCouponError(data.msg || "Invalid coupon");
+        setCouponApplied(false);
+        setCouponDiscount(0);
+        setAppliedCoupon(null);
+        return;
+      }
+      setCouponSuccess(data.msg || "Coupon applied!");
+      setCouponApplied(true);
+      setCouponDiscount(data.discount || 0);
+      setAppliedCoupon(data.coupon);
+    } catch (err) {
+      setCouponError("Network error. Please try again.");
+      setCouponApplied(false);
+      setCouponDiscount(0);
+      setAppliedCoupon(null);
+    }
+  };
+
+  const removeCoupon = () => {
+    setCouponCode("");
+    setCouponApplied(false);
+    setCouponError("");
+    setCouponSuccess("");
+    setCouponDiscount(0);
+    setAppliedCoupon(null);
+  };
+
   const discount = promoApplied ? subtotal * 0.1 : 0;
-  const finalTotal = total - discount;
+  const finalTotal = total - discount - couponDiscount;
 
   const handleBlur = (field: string) =>
     setTouched((t) => ({ ...t, [field]: true }));
@@ -105,6 +156,9 @@ const OrderSummary = ({
               },
               paymentMethod,
               notes: form.notes,
+              couponCode: couponApplied ? couponCode : undefined,
+              discount: couponApplied ? couponDiscount : 0,
+              finalPrice: couponApplied ? finalTotal : item.price * item.quantity,
             }),
           }
         );
@@ -216,6 +270,46 @@ const OrderSummary = ({
     <div className="bg-gray-50 rounded-lg p-6 sticky top-8">
       <h2 className="text-xl font-bold text-black mb-6">Order Summary</h2>
 
+      {/* Coupon Code */}
+      <div className="mb-6">
+        <div className="flex space-x-2">
+          <div className="flex-1 relative">
+            <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Coupon code"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
+              className="pl-10 border-gray-300 focus:border-black"
+              disabled={couponApplied}
+            />
+          </div>
+          {!couponApplied ? (
+            <Button
+              onClick={applyCoupon}
+              variant="outline"
+              className="border-black text-black hover:bg-black hover:text-white"
+            >
+              Apply
+            </Button>
+          ) : (
+            <Button
+              onClick={removeCoupon}
+              variant="outline"
+              className="border-black text-black hover:bg-black hover:text-white"
+            >
+              Remove
+            </Button>
+          )}
+        </div>
+        {couponError && (
+          <p className="text-sm text-red-600 mt-2">{couponError}</p>
+        )}
+        {couponSuccess && (
+          <p className="text-sm text-green-600 mt-2">✓ {couponSuccess}</p>
+        )}
+      </div>
+
       {/* Promo Code */}
       <div className="mb-6">
         <div className="flex space-x-2">
@@ -262,10 +356,23 @@ const OrderSummary = ({
           <span>₹{tax.toFixed(2)}</span>
         </div>
 
-        {promoApplied && (
+        {couponApplied && (
           <div className="flex justify-between text-green-600">
-            <span>Discount (10%)</span>
-            <span>-₹{discount.toFixed(2)}</span>
+            <span>Discount ({appliedCoupon?.discountType === "percentage" ? `${appliedCoupon.discountValue}%` : `₹${appliedCoupon.discountValue}`})</span>
+            <span>-₹{couponDiscount.toFixed(2)}</span>
+          </div>
+        )}
+        {couponApplied && appliedCoupon && (
+          <div className="text-xs text-gray-500 mt-1">
+            {appliedCoupon.expiryDate && (
+              <div>Expires: {new Date(appliedCoupon.expiryDate).toLocaleDateString()}</div>
+            )}
+            {appliedCoupon.minOrderValue > 0 && (
+              <div>Min order: ₹{appliedCoupon.minOrderValue}</div>
+            )}
+            {appliedCoupon.usageLimit && (
+              <div>Usage left: {appliedCoupon.usageLimit - (appliedCoupon.usedBy?.length || 0)}</div>
+            )}
           </div>
         )}
 
