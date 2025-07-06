@@ -17,26 +17,7 @@ export const CouponTable: React.FC<CouponTableProps> = ({
   searchTerm,
   onEditCoupon,
 }) => {
-  const filteredCoupons = coupons.filter(
-    (coupon) =>
-      coupon.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      coupon.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-green-100 text-green-800">Active</Badge>;
-      case "expired":
-        return <Badge className="bg-red-100 text-red-800">Expired</Badge>;
-      case "disabled":
-        return <Badge className="bg-gray-100 text-gray-800">Disabled</Badge>;
-      default:
-        return <Badge variant="secondary">Unknown</Badge>;
-    }
-  };
-
-  const formatDiscount = (discount: number, type: string) => {
+  
     return type === "percentage" ? `${discount}%` : `₹${discount}`;
   };
 
