@@ -1,6 +1,12 @@
 const express = require("express");
 const { body } = require("express-validator");
-const { registerUser, loginUser, forgotPassword, verifyOtp, resetPassword } = require("../controllers/authController");
+const {
+  registerUser,
+  loginUser,
+  forgotPassword,
+  verifyOtp,
+  resetPassword,
+} = require("../controllers/authController");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../models/User");
@@ -11,27 +17,27 @@ const router = express.Router();
 // Utility function to refresh Google access token
 const refreshGoogleToken = async (refreshToken) => {
   try {
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
+    const response = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({
-        client_id: "801989829243-jur20qvmld2se94mpj24hlvh4ntfcoti.apps.googleusercontent.com",
-        client_secret: "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",
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
         refresh_token: refreshToken,
-        grant_type: 'refresh_token',
+        grant_type: "refresh_token",
       }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to refresh token');
+      throw new Error("Failed to refresh token");
     }
 
     const data = await response.json();
     return data.access_token;
   } catch (error) {
-    console.error('Error refreshing Google token:', error);
+    console.error("Error refreshing Google token:", error);
     throw error;
   }
 };
@@ -41,7 +47,7 @@ const makeGoogleApiCall = async (accessToken, endpoint) => {
   try {
     const response = await fetch(`https://www.googleapis.com${endpoint}`, {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
 
@@ -51,7 +57,7 @@ const makeGoogleApiCall = async (accessToken, endpoint) => {
 
     return await response.json();
   } catch (error) {
-    console.error('Error making Google API call:', error);
+    console.error("Error making Google API call:", error);
     throw error;
   }
 };
@@ -91,16 +97,17 @@ router.post("/reset-password", resetPassword);
 passport.use(
   new GoogleStrategy(
     {
-      clientID: "801989829243-jur20qvmld2se94mpj24hlvh4ntfcoti.apps.googleusercontent.com",
-      clientSecret: "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",
-      callbackURL: "http://localhost:8000/api/auth/google/callback",
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
         let user = await User.findOne({ googleId: profile.id });
         if (!user) {
           // Try to find by email (in case user signed up with email before)
-          const email = profile.emails && profile.emails[0] && profile.emails[0].value;
+          const email =
+            profile.emails && profile.emails[0] && profile.emails[0].value;
           user = await User.findOne({ email });
           if (user) {
             user.googleId = profile.id;
@@ -136,35 +143,34 @@ passport.use(
 // Google Auth Route
 router.get(
   "/google",
-  passport.authenticate("google", { 
+  passport.authenticate("google", {
     scope: [
-      "profile", 
-      "email", 
+      "profile",
+      "email",
       "https://www.googleapis.com/auth/userinfo.profile",
-      "https://www.googleapis.com/auth/userinfo.email"
-    ] 
+      "https://www.googleapis.com/auth/userinfo.email",
+    ],
   })
 );
 
 // Google Auth Callback
-router.get(
-  "/google/callback",
-  (req, res, next) => {
-    passport.authenticate("google", { session: false }, (err, user, info) => {
-      if (err) {
-        console.error("Google OAuth Error:", err);
-        return res.status(500).json({ msg: "Server Error", error: err.message, stack: err.stack });
-      }
-      if (!user) {
-        console.error("Google OAuth No User:", info);
-        return res.status(401).json({ msg: "Unauthorized", info });
-      }
-      // Generate JWT and redirect or respond
-      const token = generateToken(user._id);
-      res.redirect(`http://localhost:8080?token=${token}`);
-    })(req, res, next);
-  }
-);
+router.get("/google/callback", (req, res, next) => {
+  passport.authenticate("google", { session: false }, (err, user, info) => {
+    if (err) {
+      console.error("Google OAuth Error:", err);
+      return res
+        .status(500)
+        .json({ msg: "Server Error", error: err.message, stack: err.stack });
+    }
+    if (!user) {
+      console.error("Google OAuth No User:", info);
+      return res.status(401).json({ msg: "Unauthorized", info });
+    }
+    // Generate JWT and redirect or respond
+    const token = generateToken(user._id);
+    res.redirect(`http://localhost:8080?token=${token}`);
+  })(req, res, next);
+});
 
 // @route   GET /api/auth/google/profile
 // Get user's Google profile using stored access token
@@ -185,11 +191,16 @@ router.get("/google/profile", async (req, res) => {
     }
 
     // Try to get user profile from Google
-    const profile = await makeGoogleApiCall(user.googleAccessToken, '/oauth2/v2/userinfo');
+    const profile = await makeGoogleApiCall(
+      user.googleAccessToken,
+      "/oauth2/v2/userinfo"
+    );
     res.json({ profile });
   } catch (error) {
-    console.error('Error fetching Google profile:', error);
-    res.status(500).json({ msg: "Error fetching Google profile", error: error.message });
+    console.error("Error fetching Google profile:", error);
+    res
+      .status(500)
+      .json({ msg: "Error fetching Google profile", error: error.message });
   }
 });
 
@@ -213,15 +224,20 @@ router.post("/google/refresh", async (req, res) => {
 
     // Refresh the access token
     const newAccessToken = await refreshGoogleToken(user.googleRefreshToken);
-    
+
     // Update user's access token
     user.googleAccessToken = newAccessToken;
     await user.save();
 
-    res.json({ msg: "Token refreshed successfully", accessToken: newAccessToken });
+    res.json({
+      msg: "Token refreshed successfully",
+      accessToken: newAccessToken,
+    });
   } catch (error) {
-    console.error('Error refreshing token:', error);
-    res.status(500).json({ msg: "Error refreshing token", error: error.message });
+    console.error("Error refreshing token:", error);
+    res
+      .status(500)
+      .json({ msg: "Error refreshing token", error: error.message });
   }
 });
 
@@ -244,11 +260,16 @@ router.get("/google/calendar", async (req, res) => {
     }
 
     // Get calendar events (this is just an example - you'd need calendar scope)
-    const calendar = await makeGoogleApiCall(user.googleAccessToken, '/calendar/v3/calendars/primary/events');
+    const calendar = await makeGoogleApiCall(
+      user.googleAccessToken,
+      "/calendar/v3/calendars/primary/events"
+    );
     res.json({ calendar });
   } catch (error) {
-    console.error('Error fetching Google calendar:', error);
-    res.status(500).json({ msg: "Error fetching Google calendar", error: error.message });
+    console.error("Error fetching Google calendar:", error);
+    res
+      .status(500)
+      .json({ msg: "Error fetching Google calendar", error: error.message });
   }
 });
 
