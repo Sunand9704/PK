@@ -6,44 +6,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
 
-// Mock data
-const coupons = [
-  {
-    id: 1,
-    code: "SAVE20",
-    description: "20% off on all products",
-    discount: 20,
-    type: "percentage",
-    status: "active",
-    usageCount: 45,
-    usageLimit: 100,
-    expiryDate: "2024-03-31",
-  },
-  {
-    id: 2,
-    code: "FLAT50",
-    description: "₹50 off on orders above ₹200",
-    discount: 50,
-    type: "fixed",
-    status: "active",
-    usageCount: 23,
-    usageLimit: 50,
-    expiryDate: "2024-02-28",
-  },
-  {
-    id: 3,
-    code: "WELCOME10",
-    description: "10% off for new customers",
-    discount: 10,
-    type: "percentage",
-    status: "expired",
-    usageCount: 156,
-    usageLimit: 200,
-    expiryDate: "2024-01-31",
-  },
-];
 
 interface CouponTableProps {
   searchTerm: string;
