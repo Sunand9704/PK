@@ -25,32 +25,7 @@ export const CouponTable: React.FC<CouponTableProps> = ({
       <CardContent className="p-0">
         
 
-                <TableCell>
-                  {coupon.usageCount}/{coupon.usageLimit}
-                </TableCell>
-                <TableCell>{getStatusBadge(coupon.status)}</TableCell>
-                <TableCell>{coupon.expiryDate}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end space-x-2">
-                    <Button variant="ghost" size="icon">
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEditCoupon(coupon)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+
               </TableRow>
             ))}
           </TableBody>
