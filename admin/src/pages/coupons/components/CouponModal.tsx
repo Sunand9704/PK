@@ -68,13 +68,7 @@ export const CouponModal: React.FC<CouponModalProps> = ({
     e.preventDefault();
 
     // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: coupon ? "Coupon updated" : "Coupon created",
-        description: `${formData.code} has been ${coupon ? "updated" : "created"} successfully.`,
-      });
-      onClose();
-    }, 1000);
+    
   };
 
   const handleInputChange = (field: string, value: string) => {
