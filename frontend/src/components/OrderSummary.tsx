@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Tag } from "lucide-react";
+import { Tag, MapPin, CheckCircle, Plus, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { toast } from "@/components/ui/use-toast";
@@ -55,6 +55,19 @@ const OrderSummary = ({
   const [paymentMethod, setPaymentMethod] = React.useState("razorpay");
   const [paymentDialogOpen, setPaymentDialogOpen] = React.useState(false);
   const [orderLoading, setOrderLoading] = React.useState(false);
+  const [couponCode, setCouponCode] = React.useState("");
+  const [couponApplied, setCouponApplied] = React.useState(false);
+  const [couponError, setCouponError] = React.useState("");
+  const [couponSuccess, setCouponSuccess] = React.useState("");
+  const [couponDiscount, setCouponDiscount] = React.useState(0);
+  const [appliedCoupon, setAppliedCoupon] = React.useState<any>(null);
+  const [addresses, setAddresses] = React.useState<any[]>([]);
+  const [selectedAddressIndex, setSelectedAddressIndex] = React.useState<number | null>(null);
+  const [showAddressForm, setShowAddressForm] = React.useState(false);
+  const [addressForm, setAddressForm] = React.useState({
+    label: '', street: '', city: '', state: '', zip: '', country: ''
+  });
+  const [addressLoading, setAddressLoading] = React.useState(false);
 
   const applyPromoCode = () => {
     if (promoCode.toLowerCase() === "save10") {
@@ -62,8 +75,53 @@ const OrderSummary = ({
     }
   };
 
+  const applyCoupon = async () => {
+    setCouponError("");
+    setCouponSuccess("");
+    if (!couponCode) {
+      setCouponError("Please enter a coupon code.");
+      return;
+    }
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/coupons/apply`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code: couponCode, orderValue: total }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setCouponError(data.msg || "Invalid coupon");
+        setCouponApplied(false);
+        setCouponDiscount(0);
+        setAppliedCoupon(null);
+        return;
+      }
+      setCouponSuccess(data.msg || "Coupon applied!");
+      setCouponApplied(true);
+      setCouponDiscount(data.discount || 0);
+      setAppliedCoupon(data.coupon);
+    } catch (err) {
+      setCouponError("Network error. Please try again.");
+      setCouponApplied(false);
+      setCouponDiscount(0);
+      setAppliedCoupon(null);
+    }
+  };
+
+  const removeCoupon = () => {
+    setCouponCode("");
+    setCouponApplied(false);
+    setCouponError("");
+    setCouponSuccess("");
+    setCouponDiscount(0);
+    setAppliedCoupon(null);
+  };
+
   const discount = promoApplied ? subtotal * 0.1 : 0;
-  const finalTotal = total - discount;
+  const finalTotal = total - discount - couponDiscount;
 
   const handleBlur = (field: string) =>
     setTouched((t) => ({ ...t, [field]: true }));
@@ -105,6 +163,9 @@ const OrderSummary = ({
               },
               paymentMethod,
               notes: form.notes,
+              couponCode: couponApplied ? couponCode : undefined,
+              discount: couponApplied ? couponDiscount : 0,
+              finalPrice: couponApplied ? finalTotal : item.price * item.quantity,
             }),
           }
         );
@@ -212,9 +273,109 @@ const OrderSummary = ({
     }
   };
 
+  React.useEffect(() => {
+    if (checkoutOpen && token) {
+      fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(res => res.json())
+        .then(data => {
+          setAddresses(data.addressBook || []);
+          setSelectedAddressIndex(data.addressBook && data.addressBook.length > 0 ? 0 : null);
+        });
+    }
+  }, [checkoutOpen, token]);
+
+  const handleSelectAddress = (idx: number) => {
+    setSelectedAddressIndex(idx);
+    setShowAddressForm(false);
+  };
+
+  const handleAddressFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAddressForm({ ...addressForm, [e.target.name]: e.target.value });
+  };
+
+  const handleAddressFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddressLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/address`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(addressForm),
+      });
+      if (!res.ok) throw new Error("Failed to add address");
+      const data = await res.json();
+      setAddresses(data.addressBook || []);
+      setSelectedAddressIndex((data.addressBook || []).length - 1);
+      setShowAddressForm(false);
+      setAddressForm({ label: '', street: '', city: '', state: '', zip: '', country: '' });
+    } catch (err) {
+      toast({ title: err instanceof Error ? err.message : 'Error adding address', variant: 'destructive' });
+    } finally {
+      setAddressLoading(false);
+    }
+  };
+
+  const selectedAddress = selectedAddressIndex !== null ? addresses[selectedAddressIndex] : null;
+
+  React.useEffect(() => {
+    if (selectedAddress) {
+      setForm((f) => ({
+        ...f,
+        name: selectedAddress.label || "",
+        address: selectedAddress.street || "",
+        city: selectedAddress.city || "",
+        state: selectedAddress.state || "",
+        zip: selectedAddress.zip || "",
+        country: selectedAddress.country || "",
+      }));
+    }
+  }, [selectedAddressIndex]);
+
   return (
     <div className="bg-gray-50 rounded-lg p-6 sticky top-8">
       <h2 className="text-xl font-bold text-black mb-6">Order Summary</h2>
+
+      {/* Coupon Code */}
+      <div className="mb-6">
+        <div className="flex space-x-2">
+          <div className="flex-1 relative">
+            <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Coupon code"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
+              className="pl-10 border-gray-300 focus:border-black"
+              disabled={couponApplied}
+            />
+          </div>
+          {!couponApplied ? (
+            <Button
+              onClick={applyCoupon}
+              variant="outline"
+              className="border-black text-black hover:bg-black hover:text-white"
+            >
+              Apply
+            </Button>
+          ) : (
+            <Button
+              onClick={removeCoupon}
+              variant="outline"
+              className="border-black text-black hover:bg-black hover:text-white"
+            >
+              Remove
+            </Button>
+          )}
+        </div>
+        {couponError && (
+          <p className="text-sm text-red-600 mt-2">{couponError}</p>
+        )}
+        {couponSuccess && (
+          <p className="text-sm text-green-600 mt-2">✓ {couponSuccess}</p>
+        )}
+      </div>
 
       {/* Promo Code */}
       <div className="mb-6">
@@ -262,10 +423,23 @@ const OrderSummary = ({
           <span>₹{tax.toFixed(2)}</span>
         </div>
 
-        {promoApplied && (
+        {couponApplied && (
           <div className="flex justify-between text-green-600">
-            <span>Discount (10%)</span>
-            <span>-₹{discount.toFixed(2)}</span>
+            <span>Discount ({appliedCoupon?.discountType === "percentage" ? `${appliedCoupon.discountValue}%` : `₹${appliedCoupon.discountValue}`})</span>
+            <span>-₹{couponDiscount.toFixed(2)}</span>
+          </div>
+        )}
+        {couponApplied && appliedCoupon && (
+          <div className="text-xs text-gray-500 mt-1">
+            {appliedCoupon.expiryDate && (
+              <div>Expires: {new Date(appliedCoupon.expiryDate).toLocaleDateString()}</div>
+            )}
+            {appliedCoupon.minOrderValue > 0 && (
+              <div>Min order: ₹{appliedCoupon.minOrderValue}</div>
+            )}
+            {appliedCoupon.usageLimit && (
+              <div>Usage left: {appliedCoupon.usageLimit - (appliedCoupon.usedBy?.length || 0)}</div>
+            )}
           </div>
         )}
 
@@ -292,193 +466,88 @@ const OrderSummary = ({
           <DialogHeader>
             <DialogTitle>Checkout</DialogTitle>
             <DialogDescription>
-              Enter your shipping address and contact details.
+              Select your shipping address or add a new one.
             </DialogDescription>
           </DialogHeader>
-          <form
-            onSubmit={handleCheckout}
-            className="space-y-6 bg-gray-50 p-4 rounded-lg border border-gray-200"
-          >
-            {/* Shipping Address */}
-            <div>
-              <h3 className="font-semibold text-lg mb-2 text-black">
-                Shipping Address
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Name
-                  </label>
-                  <Input
-                    placeholder="Full Name"
-                    value={form.name}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, name: e.target.value }))
-                    }
-                    onBlur={() => handleBlur("name")}
-                    className={
-                      touched.name && !form.name ? "border-red-500" : ""
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Address
-                  </label>
-                  <Input
-                    placeholder="Address"
-                    value={form.address}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, address: e.target.value }))
-                    }
-                    onBlur={() => handleBlur("address")}
-                    className={
-                      touched.address && !form.address ? "border-red-500" : ""
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    City
-                  </label>
-                  <Input
-                    placeholder="City"
-                    value={form.city}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, city: e.target.value }))
-                    }
-                    onBlur={() => handleBlur("city")}
-                    className={
-                      touched.city && !form.city ? "border-red-500" : ""
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    State
-                  </label>
-                  <Input
-                    placeholder="State"
-                    value={form.state}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, state: e.target.value }))
-                    }
-                    onBlur={() => handleBlur("state")}
-                    className={
-                      touched.state && !form.state ? "border-red-500" : ""
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ZIP Code
-                  </label>
-                  <Input
-                    placeholder="ZIP Code"
-                    value={form.zip}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, zip: e.target.value }))
-                    }
-                    onBlur={() => handleBlur("zip")}
-                    className={touched.zip && !form.zip ? "border-red-500" : ""}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Country
-                  </label>
-                  <Input
-                    placeholder="Country"
-                    value={form.country}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, country: e.target.value }))
-                    }
-                    onBlur={() => handleBlur("country")}
-                    className={
-                      touched.country && !form.country ? "border-red-500" : ""
-                    }
-                    required
-                  />
-                </div>
+          {addresses.length > 0 && !showAddressForm && (
+            <div className="mb-6">
+              <h3 className="font-bold text-lg mb-3 text-black">Choose Shipping Address</h3>
+              <div className="space-y-3">
+                {addresses.map((addr, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-4 rounded-lg border-2 transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md bg-white ${selectedAddressIndex === idx ? 'border-blue-600 bg-blue-50 shadow' : 'border-gray-200'}`}
+                    onClick={() => handleSelectAddress(idx)}
+                  >
+                    <div>
+                      <div className="font-semibold text-base flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-blue-600" />
+                        {addr.label || 'Address'}
+                      </div>
+                      <div className="text-gray-700 text-sm mt-1">
+                        {addr.street}, {addr.city}, {addr.state}, {addr.zip}, {addr.country}
+                      </div>
+                    </div>
+                    {selectedAddressIndex === idx && (
+                      <CheckCircle className="w-6 h-6 text-blue-600" />
+                    )}
+                  </div>
+                ))}
               </div>
+              <Button type="button" className="mt-5 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all" onClick={() => setShowAddressForm(true)}>
+                <Plus className="w-4 h-4" /> Add New Address
+              </Button>
             </div>
-            {/* Contact Info */}
-            <div>
-              <h3 className="font-semibold text-lg mb-2 text-black">
-                Contact Info
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <Input
-                    placeholder="Email"
-                    type="email"
-                    value={form.email}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, email: e.target.value }))
-                    }
-                    onBlur={() => handleBlur("email")}
-                    className={
-                      touched.email && !form.email ? "border-red-500" : ""
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
-                  </label>
-                  <Input
-                    placeholder="Phone Number"
-                    value={form.phone}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, phone: e.target.value }))
-                    }
-                    onBlur={() => handleBlur("phone")}
-                    className={
-                      touched.phone && !form.phone ? "border-red-500" : ""
-                    }
-                    required
-                  />
-                </div>
+          )}
+          {showAddressForm && (
+            <form onSubmit={handleAddressFormSubmit} className="space-y-4 p-4 bg-gray-50 rounded-lg shadow-md border border-gray-200 animate-fade-in">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xl font-bold text-black">Add New Address</h3>
+                <button type="button" onClick={() => setShowAddressForm(false)} className="text-gray-500 hover:text-black"><X className="w-5 h-5" /></button>
               </div>
-            </div>
-            {/* Promo/Notes */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Promo code or notes (optional)
-              </label>
-              <Input
-                placeholder="Promo code or notes (optional)"
-                value={form.notes}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, notes: e.target.value }))
-                }
-              />
-            </div>
-            {checkoutError && (
-              <div className="text-red-500 text-sm text-center font-medium">
-                {checkoutError}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input name="label" placeholder="Label (e.g. Home, Work)" value={addressForm.label} onChange={handleAddressFormChange} />
+                <Input name="street" placeholder="Street" value={addressForm.street} onChange={handleAddressFormChange} required />
+                <Input name="city" placeholder="City" value={addressForm.city} onChange={handleAddressFormChange} required />
+                <Input name="state" placeholder="State" value={addressForm.state} onChange={handleAddressFormChange} />
+                <Input name="zip" placeholder="ZIP Code" value={addressForm.zip} onChange={handleAddressFormChange} />
+                <Input name="country" placeholder="Country" value={addressForm.country} onChange={handleAddressFormChange} required />
+              </div>
+              <div className="flex gap-2 mt-4">
+                <Button type="submit" disabled={addressLoading} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all">{addressLoading ? 'Saving...' : 'Save Address'}</Button>
+                <Button type="button" variant="outline" onClick={() => setShowAddressForm(false)} className="border-gray-300">Cancel</Button>
+              </div>
+            </form>
+          )}
+          {addresses.length === 0 && !showAddressForm && (
+            <Button type="button" onClick={() => setShowAddressForm(true)} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all">
+              <Plus className="w-4 h-4" /> Add Shipping Address
+            </Button>
+          )}
+          <form onSubmit={handleCheckout} className="space-y-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+            {selectedAddress && (
+              <div>
+                <h3 className="font-semibold text-lg mb-2 text-black">Contact Info</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <Input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} onBlur={() => handleBlur("email")} className={touched.email && !form.email ? "border-red-500" : ""} required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <Input placeholder="Phone Number" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} onBlur={() => handleBlur("phone")} className={touched.phone && !form.phone ? "border-red-500" : ""} required />
+                  </div>
+                </div>
               </div>
             )}
-            {checkoutSuccess && (
-              <div className="text-green-600 text-sm text-center font-medium">
-                {checkoutSuccess}
-              </div>
-            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Promo code or notes (optional)</label>
+              <Input placeholder="Promo code or notes (optional)" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
+            </div>
+            {checkoutError && (<div className="text-red-500 text-sm text-center font-medium">{checkoutError}</div>)}
+            {checkoutSuccess && (<div className="text-green-600 text-sm text-center font-medium">{checkoutSuccess}</div>)}
             <DialogFooter>
-              <Button
-                type="submit"
-                className="w-full bg-black text-white hover:bg-gray-800 text-lg font-semibold"
-                disabled={checkoutLoading}
-              >
+              <Button type="submit" className="w-full bg-black text-white hover:bg-gray-800 text-lg font-semibold" disabled={checkoutLoading || !selectedAddress}>
                 {checkoutLoading ? "Submitting..." : "Continue to Payment"}
               </Button>
             </DialogFooter>

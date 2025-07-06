@@ -53,7 +53,7 @@ const sendOrderEmail = async (
 
     await transporter.sendMail(mailOptions);
   } catch (error) {
-    console.error("Error sending email:", error);
+    // Remove: console.error("Error sending email:", error);
   }
 };
 
@@ -92,7 +92,6 @@ exports.createOrder = async (req, res, next) => {
       notes = "",
     } = req.body;
     const userId = req.user.id;
-    console.log(req.body.productId);
 
     // Validate input
     if (!productId || !price) {
@@ -123,6 +122,9 @@ exports.createOrder = async (req, res, next) => {
       paymentMethod,
       notes,
       status: paymentMethod === "cod" ? "pending" : "processing",
+      discount: req.body.discount || 0,
+      finalPrice: req.body.finalPrice || price,
+      couponCode: req.body.couponCode || '',
     });
 
     await order.save();
@@ -155,6 +157,15 @@ exports.createOrder = async (req, res, next) => {
     // Populate product details
     await order.populate("productId");
 
+    // Mark coupon as used if couponCode is provided
+    if (req.body.couponCode) {
+      const Coupon = require("../models/Coupon");
+      await Coupon.findOneAndUpdate(
+        { code: req.body.couponCode },
+        { $addToSet: { usedBy: userId } }
+      );
+    }
+
     // Send order confirmation email
     const userName = `${user.firstName} ${user.lastName}`;
     const orderMessage = `
@@ -183,7 +194,16 @@ exports.createOrder = async (req, res, next) => {
       order,
     });
   } catch (error) {
-    next(error);
+    // Duplicate key error (e.g., unique constraint)
+    if (error.code === 11000) {
+      return res.status(400).json({ msg: "You have already placed an order for this product." });
+    }
+    // Mongoose validation error
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ msg: error.message });
+    }
+    // Other errors
+    res.status(500).json({ msg: "Server error. Please try again." });
   }
 };
 

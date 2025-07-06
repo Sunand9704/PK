@@ -47,7 +47,6 @@ exports.getAllProducts = async (req, res, next) => {
       Product.find(query).sort(sortObj).skip(skip).limit(parseInt(limit)),
       Product.countDocuments(query),
     ]);
-    console.log(products);
     res.json({ products, total });
   } catch (error) {
     next(error);

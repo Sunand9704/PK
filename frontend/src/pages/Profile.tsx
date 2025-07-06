@@ -14,6 +14,9 @@ import {
   Menu,
   X,
   Trash2,
+  Eye,
+  EyeOff,
+  Loader2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -39,6 +42,7 @@ import {
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
 
 const menuItems = [
   {
@@ -407,7 +411,15 @@ const Orders: React.FC = () => {
                 </div>
               </div>
               <div className="text-left md:text-right">
-                <div className="font-bold text-lg">₹{order.price}</div>
+                {order.discount > 0 ? (
+                  <>
+                    <div className="line-through text-gray-400 text-sm">₹{order.price}</div>
+                    <div className="text-green-700 text-sm">-₹{order.discount} discount</div>
+                    <div className="font-bold text-lg">₹{order.finalPrice}</div>
+                  </>
+                ) : (
+                  <div className="font-bold text-lg">₹{order.price}</div>
+                )}
                 <span
                   className={`inline-block px-2 py-1 text-xs rounded ${getStatusColor(order.status)}`}
                 >
@@ -780,6 +792,29 @@ export default function Profile() {
     country: '',
   });
   const [addressLoading, setAddressLoading] = useState(false);
+  const [userReviews, setUserReviews] = useState<any[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [reviewsError, setReviewsError] = useState<string | null>(null);
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+  const [editReviewText, setEditReviewText] = useState("");
+  const [editReviewRating, setEditReviewRating] = useState(0);
+  const [changePwdOpen, setChangePwdOpen] = useState(false);
+  const [changePwdStep, setChangePwdStep] = useState(1); // 1=otp, 2=new password
+  const [otp, setOtp] = useState("");
+  const [newPwd, setNewPwd] = useState("");
+  const [confirmPwd, setConfirmPwd] = useState("");
+  const [pwdLoading, setPwdLoading] = useState(false);
+  const [pwdError, setPwdError] = useState("");
+  const [pwdSuccess, setPwdSuccess] = useState("");
+  const [showNewPwd, setShowNewPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const otpInputRef = React.useRef<HTMLInputElement>(null);
+  const pwdInputRef = React.useRef<HTMLInputElement>(null);
+  const emailInputRef = React.useRef<HTMLInputElement>(null);
+
+  const userEmail = userInfo?.email || "";
+  const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -815,6 +850,23 @@ export default function Profile() {
     };
     if (token) fetchUserProfile();
   }, [token]);
+
+  useEffect(() => {
+    if (activeSection === "reviews" && token) {
+      setLoadingReviews(true);
+      setReviewsError(null);
+      fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reviews/user`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch reviews");
+          return res.json();
+        })
+        .then((data) => setUserReviews(data.reviews || []))
+        .catch((err) => setReviewsError(err.message || "Error fetching reviews"))
+        .finally(() => setLoadingReviews(false));
+    }
+  }, [activeSection, token]);
 
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
@@ -957,6 +1009,120 @@ export default function Profile() {
       toast({ title: err.message || "Error deleting address", variant: "destructive" });
     } finally {
       setAddressLoading(false);
+    }
+  };
+
+  // Autofocus logic
+  useEffect(() => {
+    if (changePwdOpen) {
+      if (changePwdStep === 1 && emailInputRef.current) emailInputRef.current.focus();
+      if (changePwdStep === 2 && otpInputRef.current) otpInputRef.current.focus();
+      if (changePwdStep === 3 && pwdInputRef.current) pwdInputRef.current.focus();
+    }
+  }, [changePwdOpen, changePwdStep]);
+
+  // Reset dialog state on close
+  useEffect(() => {
+    if (!changePwdOpen) {
+      setChangePwdStep(1);
+      setOtp("");
+      setNewPwd("");
+      setConfirmPwd("");
+      setPwdError("");
+      setPwdSuccess("");
+      setPwdLoading(false);
+      setOtpCooldown(0);
+    }
+  }, [changePwdOpen]);
+
+  // OTP resend cooldown
+  useEffect(() => {
+    if (otpCooldown > 0) {
+      const timer = setTimeout(() => setOtpCooldown(otpCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [otpCooldown]);
+
+  const handleSendOtp = async () => {
+    setPwdError(""); setPwdSuccess(""); setPwdLoading(true);
+    try {
+      const res = await fetch(`${baseUrl}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: userEmail })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setPwdSuccess("OTP sent to your email!");
+        setChangePwdStep(2);
+        setOtpCooldown(30); // 30s cooldown
+      } else {
+        setPwdError(data.message || "Failed to send OTP");
+      }
+    } catch {
+      setPwdError("Network error");
+    } finally {
+      setPwdLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (otpCooldown > 0) return;
+    await handleSendOtp();
+  };
+
+  const isOtpValid = otp.length === 6 && /^[0-9]+$/.test(otp);
+  const isPwdValid = newPwd.length >= 6;
+  const isPwdMatch = newPwd === confirmPwd && isPwdValid;
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdError(""); setPwdSuccess(""); setPwdLoading(true);
+    try {
+      const res = await fetch(`${baseUrl}/api/auth/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: userEmail, otp })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setPwdSuccess("OTP verified!");
+        setChangePwdStep(3);
+      } else {
+        setPwdError(data.message || "Invalid OTP");
+      }
+    } catch {
+      setPwdError("Network error");
+    } finally {
+      setPwdLoading(false);
+    }
+  };
+
+  const handleResetPwd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdError(""); setPwdSuccess("");
+    if (newPwd !== confirmPwd) {
+      setPwdError("Passwords do not match");
+      return;
+    }
+    setPwdLoading(true);
+    try {
+      const res = await fetch(`${baseUrl}/api/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: userEmail, otp, password: newPwd })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setPwdSuccess("Password changed successfully!");
+        setTimeout(() => setChangePwdOpen(false), 1200);
+      } else {
+        setPwdError(data.message || "Failed to change password");
+      }
+    } catch {
+      setPwdError("Network error");
+    } finally {
+      setPwdLoading(false);
     }
   };
 
@@ -1146,29 +1312,256 @@ export default function Profile() {
         <h2 className="text-2xl font-bold mb-4">Security Settings</h2>
         <div className="bg-white p-4 md:p-6 rounded shadow mb-4">
           <div className="font-semibold mb-2">Change Password</div>
+          <Dialog open={changePwdOpen} onOpenChange={setChangePwdOpen}>
+            <DialogTrigger asChild>
           <Button variant="outline">Change</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Change Password</DialogTitle>
+                <DialogDescription>
+                  <div className="mb-2 text-xs text-gray-500">Step {changePwdStep} of 3</div>
+                  {changePwdStep === 1 && "Send OTP to your registered email to continue."}
+                  {changePwdStep === 2 && "Enter the OTP sent to your email."}
+                  {changePwdStep === 3 && "Enter your new password twice for confirmation."}
+                </DialogDescription>
+              </DialogHeader>
+              {pwdError && <div className="text-red-500 mb-2">{pwdError}</div>}
+              {pwdSuccess && <div className="text-green-600 mb-2">{pwdSuccess}</div>}
+              {changePwdStep === 1 && (
+                <div>
+                  <Label>Email</Label>
+                  <Input value={userEmail} readOnly className="mb-4" ref={emailInputRef} />
+                  <Button onClick={handleSendOtp} disabled={pwdLoading} className="w-full flex items-center justify-center">
+                    {pwdLoading && <Loader2 className="animate-spin h-4 w-4 mr-2" />}Send OTP
+                  </Button>
         </div>
-        <div className="bg-white p-4 md:p-6 rounded shadow">
-          <div className="font-semibold mb-2">Two-Factor Authentication</div>
-          <Button variant="outline">Enable</Button>
+              )}
+              {changePwdStep === 2 && (
+                <form onSubmit={handleVerifyOtp} className="space-y-4">
+                  <Label>OTP</Label>
+                  <div className="flex gap-2 items-center mb-2">
+                    <Input value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ""))} required maxLength={6} ref={otpInputRef} className="w-32" />
+                    <Button type="button" variant="ghost" onClick={handleResendOtp} disabled={otpCooldown > 0 || pwdLoading} className="text-xs">
+                      {otpCooldown > 0 ? `Resend OTP (${otpCooldown}s)` : "Resend OTP"}
+                    </Button>
+                  </div>
+                  <Button type="submit" disabled={!isOtpValid || pwdLoading} className="w-full flex items-center justify-center">
+                    {pwdLoading && <Loader2 className="animate-spin h-4 w-4 mr-2" />}Verify OTP
+                  </Button>
+                </form>
+              )}
+              {changePwdStep === 3 && (
+                <form onSubmit={handleResetPwd} className="space-y-4">
+                  <Label>New Password</Label>
+                  <div className="relative mb-2">
+                    <Input
+                      type={showNewPwd ? "text" : "password"}
+                      value={newPwd}
+                      onChange={e => setNewPwd(e.target.value)}
+                      required
+                      minLength={6}
+                      ref={pwdInputRef}
+                      className={isPwdValid ? "pr-10" : "pr-10 border-red-500"}
+                    />
+                    <button type="button" className="absolute right-2 top-2 text-gray-400" onClick={() => setShowNewPwd(v => !v)} tabIndex={-1}>
+                      {showNewPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  {!isPwdValid && newPwd.length > 0 && <div className="text-xs text-red-500 mb-1">Password must be at least 6 characters.</div>}
+                  <Label>Confirm New Password</Label>
+                  <div className="relative mb-2">
+                    <Input
+                      type={showConfirmPwd ? "text" : "password"}
+                      value={confirmPwd}
+                      onChange={e => setConfirmPwd(e.target.value)}
+                      required
+                      minLength={6}
+                      className={isPwdMatch || confirmPwd.length === 0 ? "pr-10" : "pr-10 border-red-500"}
+                    />
+                    <button type="button" className="absolute right-2 top-2 text-gray-400" onClick={() => setShowConfirmPwd(v => !v)} tabIndex={-1}>
+                      {showConfirmPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  {!isPwdMatch && confirmPwd.length > 0 && <div className="text-xs text-red-500 mb-1">Passwords do not match.</div>}
+                  <Button type="submit" disabled={!isPwdMatch || pwdLoading} className="w-full flex items-center justify-center">
+                    {pwdLoading && <Loader2 className="animate-spin h-4 w-4 mr-2" />}Change Password
+                  </Button>
+                </form>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     ),
     reviews: (
       <div className="p-4 md:p-8">
         <h2 className="text-2xl font-bold mb-4">Reviews & Ratings</h2>
+        {loadingReviews ? (
+          <div>Loading reviews...</div>
+        ) : reviewsError ? (
+          <div className="text-red-500">{reviewsError}</div>
+        ) : userReviews.length === 0 ? (
+          <div className="text-gray-500">You haven't written any reviews yet.</div>
+        ) : (
         <ul className="space-y-4">
-          <li className="bg-white p-4 rounded shadow">
-            <div className="font-semibold">Running Shoes</div>
-            <div className="text-yellow-500">★★★★☆</div>
-            <div className="text-gray-600 text-sm">"Very comfortable and stylish!"</div>
+            {userReviews.map((review) => (
+              <li key={review._id} className="bg-white p-4 rounded shadow flex items-start gap-4">
+                {review.productImage && (
+                  <img
+                    src={review.productImage}
+                    alt={review.productName}
+                    className="w-16 h-16 object-cover rounded border"
+                  />
+                )}
+                <div className="flex-1">
+                  <div className="font-semibold">{review.productName}</div>
+                  <div className="text-yellow-500 mb-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <span key={i}>{i < review.rating ? "★" : "☆"}</span>
+                    ))}
+                  </div>
+                  {editingReviewId === review._id ? (
+                    <form
+                      className="space-y-2"
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        if (!editReviewRating) {
+                          toast({ title: "Please select a rating.", variant: "destructive" });
+                          return;
+                        }
+                        if (!editReviewText.trim()) {
+                          toast({ title: "Please write a review.", variant: "destructive" });
+                          return;
+                        }
+                        setEditLoading(true);
+                        try {
+                          const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reviews/${review._id}`, {
+                            method: "PATCH",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({
+                              rating: editReviewRating,
+                              review: editReviewText.trim(),
+                            }),
+                          });
+                          const data = await res.json();
+                          if (!res.ok) throw new Error(data.msg || "Failed to update review");
+                          toast({ title: "Review updated!" });
+                          setEditingReviewId(null);
+                          // Refresh reviews
+                          setLoadingReviews(true);
+                          const reviewsRes = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reviews/user`, {
+                            headers: { Authorization: `Bearer ${token}` },
+                          });
+                          if (reviewsRes.ok) {
+                            const reviewsData = await reviewsRes.json();
+                            setUserReviews(reviewsData.reviews || []);
+                          }
+                        } catch (err: any) {
+                          toast({ title: "Failed to update review", description: err.message, variant: "destructive" });
+                        } finally {
+                          setEditLoading(false);
+                          setLoadingReviews(false);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center space-x-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            type="button"
+                            key={star}
+                            onClick={() => setEditReviewRating(star)}
+                            className="focus:outline-none"
+                            aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
+                          >
+                            <span className={`text-2xl ${editReviewRating >= star ? "text-yellow-400" : "text-gray-300"}`}>★</span>
+                          </button>
+                        ))}
+                      </div>
+                      <textarea
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-gray-900 text-base resize-none transition-shadow"
+                        value={editReviewText}
+                        onChange={(e) => setEditReviewText(e.target.value)}
+                        maxLength={500}
+                        required
+                      />
+                      <div className="flex space-x-2">
+                        <button
+                          type="submit"
+                          className="bg-black text-white px-4 py-2 rounded"
+                          disabled={editLoading}
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          className="bg-gray-200 px-4 py-2 rounded"
+                          onClick={() => setEditingReviewId(null)}
+                          disabled={editLoading}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <div className="text-gray-600 text-sm mb-1">"{review.review}"</div>
+                      <div className="text-xs text-gray-400 mb-2">{new Date(review.createdAt).toLocaleDateString()}</div>
+                      <div className="flex space-x-2 mt-1">
+                        <button
+                          className="text-blue-600 hover:underline"
+                          onClick={() => {
+                            setEditingReviewId(review._id);
+                            setEditReviewText(review.review);
+                            setEditReviewRating(review.rating);
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="text-red-600 hover:underline"
+                          onClick={async () => {
+                            if (!window.confirm("Are you sure you want to delete this review?")) return;
+                            setEditLoading(true);
+                            try {
+                              const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reviews/${review._id}`, {
+                                method: "DELETE",
+                                headers: { Authorization: `Bearer ${token}` },
+                              });
+                              const data = await res.json();
+                              if (!res.ok) throw new Error(data.msg || "Failed to delete review");
+                              toast({ title: "Review deleted!" });
+                              // Refresh reviews
+                              setLoadingReviews(true);
+                              const reviewsRes = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reviews/user`, {
+                                headers: { Authorization: `Bearer ${token}` },
+                              });
+                              if (reviewsRes.ok) {
+                                const reviewsData = await reviewsRes.json();
+                                setUserReviews(reviewsData.reviews || []);
+                              }
+                            } catch (err: any) {
+                              toast({ title: "Failed to delete review", description: err.message, variant: "destructive" });
+                            } finally {
+                              setEditLoading(false);
+                              setLoadingReviews(false);
+                            }
+                          }}
+                          disabled={editLoading}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
           </li>
-          <li className="bg-white p-4 rounded shadow">
-            <div className="font-semibold">Smart Watch</div>
-            <div className="text-yellow-500">★★★☆☆</div>
-            <div className="text-gray-600 text-sm">"Good features but battery life could be better."</div>
-          </li>
+            ))}
         </ul>
+        )}
       </div>
     ),
     coupons: (
