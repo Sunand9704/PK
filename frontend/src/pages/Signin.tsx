@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,6 +38,16 @@ const SignIn = () => {
   const [forgotError, setForgotError] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState('');
   const baseUrl = 'http://localhost:8000';
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      login(token);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      window.location.reload();
+    }
+  }, [login]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,7 +204,11 @@ const SignIn = () => {
           <CardContent className="space-y-6">
             {/* Social Login Buttons */}
             <div className="space-y-3">
-              <Button variant="outline" className="w-full border-gray-300 text-black hover:bg-gray-50">
+              <Button
+                variant="outline"
+                className="w-full border-gray-300 text-black hover:bg-gray-50"
+                onClick={() => { window.location.href = 'http://localhost:8000/api/auth/google'; }}
+              >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -203,8 +217,6 @@ const SignIn = () => {
                 </svg>
                 Continue with Google
               </Button>
-              
-    
             </div>
 
             <div className="relative">

@@ -70,7 +70,6 @@ const ProductDetail = () => {
         if (!res.ok) throw new Error("Product not found");
         const data = await res.json();
         setProduct(data);
-        console.log(data.category);
         // Fetch related products by category
         if (data.category) {
           const relRes = await fetch(
@@ -78,7 +77,6 @@ const ProductDetail = () => {
           );
           if (relRes.ok) {
             const relData = await relRes.json();
-            console.log(relData);
 
             setRelatedProducts(
               (relData.products || [])

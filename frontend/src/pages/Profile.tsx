@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   User,
   Home,
@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Menu,
   X,
+  Trash2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,6 @@ const menuItems = [
     category: "Account",
     items: [
       { title: "User Information", icon: User, id: "user-info" },
-      { title: "Address Book", icon: Home, id: "address-book" },
     ],
   },
   {
@@ -52,30 +52,17 @@ const menuItems = [
     items: [
       { title: "My Orders", icon: Box, id: "orders" },
       { title: "Wishlist", icon: Star, id: "wishlist" },
-      { title: "Recently Viewed", icon: Archive, id: "recent" },
-      { title: "Payment Methods", icon: ShoppingCart, id: "payment" },
     ],
   },
   {
     category: "Account Settings",
     items: [
       { title: "Security Settings", icon: Shield, id: "security" },
-      { title: "Notifications", icon: Bell, id: "notifications" },
       { title: "Reviews & Ratings", icon: Star, id: "reviews" },
       { title: "Coupons & Rewards", icon: Star, id: "coupons" },
-      { title: "Preferences", icon: Settings, id: "preferences" },
     ],
   },
 ];
-
-const userInfo = {
-  name: "John Doe",
-  email: "john.doe@example.com",
-  phone: "+1 555-123-4567",
-  dob: "1990-01-01",
-  gender: "Male",
-  avatar: "/placeholder.svg",
-};
 
 const Wishlist: React.FC = () => {
   const { token } = useAuth();
@@ -765,340 +752,627 @@ const Orders: React.FC = () => {
   );
 };
 
-const sectionContent: Record<string, React.ReactNode> = {
-  "user-info": (
-    <div className="p-4 md:p-8 max-w-xl">
-      <h2 className="text-2xl font-bold mb-4">User Information</h2>
-      <div className="bg-white p-4 md:p-6 rounded shadow flex flex-col gap-4">
-        <div className="flex items-center gap-4">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={userInfo.avatar} alt="Profile" />
-            <AvatarFallback className="bg-gray-900 text-white">
-              JD
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <div className="font-semibold text-lg">{userInfo.name}</div>
-            <div className="text-gray-500">{userInfo.email}</div>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-          <div>
-            <div className="text-xs text-gray-400">Phone</div>
-            <div className="font-medium">{userInfo.phone}</div>
-          </div>
-          <div>
-            <div className="text-xs text-gray-400">Date of Birth</div>
-            <div className="font-medium">{userInfo.dob}</div>
-          </div>
-          <div>
-            <div className="text-xs text-gray-400">Gender</div>
-            <div className="font-medium">{userInfo.gender}</div>
-          </div>
-        </div>
-        <Button className="mt-6 w-32">Edit Profile</Button>
-      </div>
-    </div>
-  ),
-  "address-book": (
-    <div className="p-4 md:p-8 max-w-2xl">
-      <h2 className="text-2xl font-bold mb-4">Address Book</h2>
-      <ul className="space-y-4">
-        <li className="bg-white p-4 md:p-6 rounded shadow flex flex-col md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="font-semibold">Home</div>
-            <div className="text-gray-500 text-sm">
-              123 Main St, Springfield, IL 62704
-            </div>
-            <div className="text-gray-400 text-xs mt-1">
-              Default Shipping Address
-            </div>
-          </div>
-          <Button variant="outline" className="mt-2 md:mt-0">
-            Edit
-          </Button>
-        </li>
-        <li className="bg-white p-4 md:p-6 rounded shadow flex flex-col md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="font-semibold">Office</div>
-            <div className="text-gray-500 text-sm">
-              456 Corporate Blvd, Chicago, IL 60616
-            </div>
-          </div>
-          <Button variant="outline" className="mt-2 md:mt-0">
-            Edit
-          </Button>
-        </li>
-        <li className="bg-white p-4 md:p-6 rounded shadow flex flex-col md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="font-semibold">Other</div>
-            <div className="text-gray-500 text-sm">
-              789 Lakeview Dr, Peoria, IL 61614
-            </div>
-          </div>
-          <Button variant="outline" className="mt-2 md:mt-0">
-            Edit
-          </Button>
-        </li>
-      </ul>
-      <Button className="mt-6">Add New Address</Button>
-    </div>
-  ),
-  orders: <Orders />,
-  wishlist: <Wishlist />,
-  recent: (
-    <div className="p-4 md:p-8">
-      <h2 className="text-2xl font-bold mb-4">Recently Viewed</h2>
-      <ul className="flex flex-wrap gap-4 md:gap-6">
-        <li className="bg-white p-4 rounded shadow flex flex-col items-center">
-          <img
-            src="/placeholder.svg"
-            alt="Product"
-            className="w-20 h-20 mb-2"
-          />
-          <div className="font-semibold">Running Shoes</div>
-        </li>
-        <li className="bg-white p-4 rounded shadow flex flex-col items-center">
-          <img
-            src="/placeholder.svg"
-            alt="Product"
-            className="w-20 h-20 mb-2"
-          />
-          <div className="font-semibold">Backpack</div>
-        </li>
-      </ul>
-    </div>
-  ),
-  payment: (
-    <div className="p-4 md:p-8">
-      <h2 className="text-2xl font-bold mb-4">Payment Methods</h2>
-      <ul className="space-y-4">
-        <li className="bg-white p-4 rounded shadow flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="font-semibold">Visa ending in 1234</div>
-            <div className="text-gray-500 text-sm">Expires 12/26</div>
-          </div>
-          <Button variant="outline" className="mt-2 sm:mt-0">
-            Remove
-          </Button>
-        </li>
-        <li className="bg-white p-4 rounded shadow flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="font-semibold">Mastercard ending in 5678</div>
-            <div className="text-gray-500 text-sm">Expires 09/25</div>
-          </div>
-          <Button variant="outline" className="mt-2 sm:mt-0">
-            Remove
-          </Button>
-        </li>
-      </ul>
-      <Button className="mt-6">Add New Payment Method</Button>
-    </div>
-  ),
-  security: (
-    <div className="p-4 md:p-8">
-      <h2 className="text-2xl font-bold mb-4">Security Settings</h2>
-      <div className="bg-white p-4 md:p-6 rounded shadow mb-4">
-        <div className="font-semibold mb-2">Change Password</div>
-        <Button variant="outline">Change</Button>
-      </div>
-      <div className="bg-white p-4 md:p-6 rounded shadow">
-        <div className="font-semibold mb-2">Two-Factor Authentication</div>
-        <Button variant="outline">Enable</Button>
-      </div>
-    </div>
-  ),
-  notifications: (
-    <div className="p-4 md:p-8">
-      <h2 className="text-2xl font-bold mb-4">Notifications</h2>
-      <div className="bg-white p-4 md:p-6 rounded shadow mb-4 flex items-center justify-between">
-        <div>Email Notifications</div>
-        <input
-          type="checkbox"
-          checked
-          readOnly
-          className="accent-gray-900 w-5 h-5"
-        />
-      </div>
-      <div className="bg-white p-4 md:p-6 rounded shadow flex items-center justify-between">
-        <div>SMS Notifications</div>
-        <input type="checkbox" className="accent-gray-900 w-5 h-5" />
-      </div>
-    </div>
-  ),
-  reviews: (
-    <div className="p-4 md:p-8">
-      <h2 className="text-2xl font-bold mb-4">Reviews & Ratings</h2>
-      <ul className="space-y-4">
-        <li className="bg-white p-4 rounded shadow">
-          <div className="font-semibold">Running Shoes</div>
-          <div className="text-yellow-500">★★★★☆</div>
-          <div className="text-gray-600 text-sm">
-            "Very comfortable and stylish!"
-          </div>
-        </li>
-        <li className="bg-white p-4 rounded shadow">
-          <div className="font-semibold">Smart Watch</div>
-          <div className="text-yellow-500">★★★☆☆</div>
-          <div className="text-gray-600 text-sm">
-            "Good features but battery life could be better."
-          </div>
-        </li>
-      </ul>
-    </div>
-  ),
-  coupons: (
-    <div className="p-4 md:p-8">
-      <h2 className="text-2xl font-bold mb-4">Coupons & Rewards</h2>
-      <ul className="space-y-4">
-        <li className="bg-white p-4 rounded shadow flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="font-semibold">WELCOME10</div>
-            <div className="text-gray-500 text-sm">
-              10% off on your first order
-            </div>
-          </div>
-          <Button variant="outline" className="mt-2 sm:mt-0">
-            Apply
-          </Button>
-        </li>
-        <li className="bg-white p-4 rounded shadow flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="font-semibold">FREESHIP</div>
-            <div className="text-gray-500 text-sm">
-              Free shipping on orders over $50
-            </div>
-          </div>
-          <Button variant="outline" className="mt-2 sm:mt-0">
-            Apply
-          </Button>
-        </li>
-      </ul>
-    </div>
-  ),
-  preferences: (
-    <div className="p-4 md:p-8">
-      <h2 className="text-2xl font-bold mb-4">Preferences</h2>
-      <div className="bg-white p-4 md:p-6 rounded shadow mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>Language</div>
-        <select className="border rounded px-2 py-1 mt-2 sm:mt-0">
-          <option>English</option>
-          <option>Spanish</option>
-        </select>
-      </div>
-      <div className="bg-white p-4 md:p-6 rounded shadow flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>Theme</div>
-        <select className="border rounded px-2 py-1 mt-2 sm:mt-0">
-          <option>Light</option>
-          <option>Dark</option>
-        </select>
-      </div>
-    </div>
-  ),
-};
-
 export default function Profile() {
   const [activeSection, setActiveSection] = useState("user-info");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { token } = useAuth();
+  const [userInfo, setUserInfo] = useState<any>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [userError, setUserError] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    phone: "",
+    dateOfBirth: "",
+    gender: "",
+    avatar: "",
+  });
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [addressDialogOpen, setAddressDialogOpen] = useState(false);
+  const [addressEditIndex, setAddressEditIndex] = useState<number | null>(null);
+  const [addressForm, setAddressForm] = useState({
+    label: '',
+    street: '',
+    city: '',
+    state: '',
+    zip: '',
+    country: '',
+  });
+  const [addressLoading, setAddressLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      setLoadingUser(true);
+      setUserError(null);
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/profile`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!res.ok) {
+          throw new Error("Failed to fetch user profile");
+        }
+        const data = await res.json();
+        setUserInfo(data);
+        setEditForm({
+          phone: data.phone || "",
+          dateOfBirth: data.dateOfBirth ? data.dateOfBirth.slice(0, 10) : "",
+          gender: data.gender || "",
+          avatar: data.avatar || "",
+        });
+        setAvatarPreview(data.avatar || "");
+        if (!data.addressBook) data.addressBook = [];
+      } catch (err: any) {
+        setUserError(err.message || "Error fetching user profile");
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+    if (token) fetchUserProfile();
+  }, [token]);
+
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("folder", "avatars");
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Failed to upload image");
+      const data = await res.json();
+      setEditForm((prev) => ({ ...prev, avatar: data.url }));
+      setAvatarPreview(data.url);
+      toast({ title: "Profile picture uploaded" });
+    } catch (err: any) {
+      toast({ title: err.message || "Error uploading image", variant: "destructive" });
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          phone: editForm.phone,
+          dateOfBirth: editForm.dateOfBirth,
+          gender: editForm.gender,
+          avatar: editForm.avatar,
+        }),
+      });
+      if (!res.ok) {
+        throw new Error("Failed to update profile");
+      }
+      const data = await res.json();
+      setUserInfo((prev: any) => ({ ...prev, ...data.user }));
+      setEditDialogOpen(false);
+      toast({ title: "Profile updated successfully" });
+    } catch (err: any) {
+      toast({ title: err.message || "Error updating profile", variant: "destructive" });
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  // Address dialog open for edit
+  const openEditAddressDialog = (index: number) => {
+    setAddressEditIndex(index);
+    const addr = userInfo?.addressBook?.[index];
+    setAddressForm({
+      label: addr?.label || '',
+      street: addr?.street || '',
+      city: addr?.city || '',
+      state: addr?.state || '',
+      zip: addr?.zip || '',
+      country: addr?.country || '',
+    });
+    setAddressDialogOpen(true);
+  };
+  // Address dialog open for add
+  const openAddAddressDialog = () => {
+    setAddressEditIndex(null);
+    setAddressForm({ label: '', street: '', city: '', state: '', zip: '', country: '' });
+    setAddressDialogOpen(true);
+  };
+  // Address form change
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAddressForm({ ...addressForm, [e.target.name]: e.target.value });
+  };
+  // Address form submit
+  const handleAddressSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddressLoading(true);
+    try {
+      let res;
+      if (addressEditIndex !== null) {
+        // Edit
+        res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/address/${addressEditIndex}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(addressForm),
+        });
+      } else {
+        // Add
+        res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/address`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(addressForm),
+        });
+      }
+      if (!res.ok) throw new Error("Failed to save address");
+      const data = await res.json();
+      setUserInfo((prev: any) => ({ ...prev, addressBook: data.addressBook }));
+      setAddressDialogOpen(false);
+      toast({ title: addressEditIndex !== null ? "Address updated" : "Address added" });
+    } catch (err: any) {
+      toast({ title: err.message || "Error saving address", variant: "destructive" });
+    } finally {
+      setAddressLoading(false);
+    }
+  };
+
+  // Address delete
+  const handleDeleteAddress = async (index: number) => {
+    if (!window.confirm("Are you sure you want to delete this address?")) return;
+    setAddressLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/address/${index}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error("Failed to delete address");
+      const data = await res.json();
+      setUserInfo((prev: any) => ({ ...prev, addressBook: data.addressBook }));
+      toast({ title: "Address deleted" });
+    } catch (err: any) {
+      toast({ title: err.message || "Error deleting address", variant: "destructive" });
+    } finally {
+      setAddressLoading(false);
+    }
+  };
+
+  // Move sectionContent inside the component
+  const sectionContent: Record<string, React.ReactNode> = {
+    "user-info": (
+      <div className="p-4 md:p-8 flex flex-col lg:flex-row gap-8 max-w-5xl">
+        {/* User Information Card */}
+        <div className="flex-1 max-w-xl">
+          <h2 className="text-2xl font-bold mb-4">User Information</h2>
+          <div className="bg-white p-4 md:p-6 rounded shadow flex flex-col gap-4">
+            {loadingUser ? (
+              <div className="text-gray-500">Loading user info...</div>
+            ) : userError ? (
+              <div className="text-red-500">{userError}</div>
+            ) : userInfo ? (
+              <>
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={userInfo.avatar || "/placeholder.svg"} alt="Profile" />
+                    <AvatarFallback className="bg-gray-900 text-white">
+                      {(userInfo.firstName?.[0] || '') + (userInfo.lastName?.[0] || '') || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-semibold text-lg">{`${userInfo.firstName || ''} ${userInfo.lastName || ''}`}</div>
+                    <div className="text-gray-500 text-sm">{userInfo.email}</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <div className="text-xs text-gray-400">Phone</div>
+                    <div className="font-medium">{userInfo.phone || "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-400">Date of Birth</div>
+                    <div className="font-medium">{userInfo.dateOfBirth ? userInfo.dateOfBirth.slice(0, 10) : "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-400">Gender</div>
+                    <div className="font-medium">{userInfo.gender || "-"}</div>
+                  </div>
+                </div>
+                <Button className="mt-6 w-32" onClick={() => setEditDialogOpen(true)}>Edit Profile</Button>
+                <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Edit Profile</DialogTitle>
+                      <DialogDescription>Update your phone, date of birth, and gender.</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleEditSubmit} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Phone</label>
+                        <Input
+                          name="phone"
+                          value={editForm.phone}
+                          onChange={handleEditChange}
+                          placeholder="Phone number"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Date of Birth</label>
+                        <Input
+                          name="dateOfBirth"
+                          type="date"
+                          value={editForm.dateOfBirth}
+                          onChange={handleEditChange}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Gender</label>
+                        <select
+                          name="gender"
+                          value={editForm.gender}
+                          onChange={handleEditChange}
+                          className="w-full border rounded px-3 py-2"
+                        >
+                          <option value="">Select gender</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                          <option value="other">Other</option>
+                          <option value="prefer not to say">Prefer not to say</option>
+                        </select>
+                      </div>
+                      <div className="flex flex-col items-center gap-2">
+                        <label className="block text-sm font-medium mb-1">Profile Picture</label>
+                        {avatarPreview && (
+                          <img src={avatarPreview} alt="Avatar Preview" className="w-20 h-20 rounded-full object-cover border" />
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleAvatarChange}
+                          disabled={avatarUploading}
+                          className="mt-2"
+                        />
+                        {avatarUploading && <span className="text-xs text-gray-500">Uploading...</span>}
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit" disabled={editLoading}>{editLoading ? "Saving..." : "Save"}</Button>
+                        <DialogClose asChild>
+                          <Button type="button" variant="outline">Cancel</Button>
+                        </DialogClose>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </>
+            ) : (
+              <div className="text-gray-500">No user info available.</div>
+            )}
+          </div>
+        </div>
+        {/* Address Book Card (static for now, can be made dynamic similarly) */}
+        <div className="flex-1 max-w-2xl">
+          <h2 className="text-2xl font-bold mb-4">Address Book</h2>
+          <ul className="space-y-4">
+            {userInfo?.addressBook && userInfo.addressBook.length > 0 ? (
+              userInfo.addressBook.map((addr: any, idx: number) => (
+                <li key={idx} className="bg-white p-4 md:p-6 rounded shadow flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <div className="font-semibold">{addr.label || "Address"}</div>
+                    <div className="text-gray-500 text-sm">
+                      {addr.street}, {addr.city}, {addr.state} {addr.zip}, {addr.country}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-2 md:mt-0">
+                    <Button variant="outline" onClick={() => openEditAddressDialog(idx)}>Edit</Button>
+                    <Button variant="ghost" onClick={() => handleDeleteAddress(idx)} disabled={addressLoading} title="Delete address">
+                      <Trash2 className="w-5 h-5 text-red-500" />
+                    </Button>
+                  </div>
+                </li>
+              ))
+            ) : (
+              <li className="text-gray-500">No addresses saved.</li>
+            )}
+          </ul>
+          <Button className="mt-6" onClick={openAddAddressDialog}>Add New Address</Button>
+          <Dialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{addressEditIndex !== null ? "Edit Address" : "Add Address"}</DialogTitle>
+                <DialogDescription>Fill in the address details below.</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleAddressSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Label</label>
+                  <Input name="label" value={addressForm.label} onChange={handleAddressChange} placeholder="e.g. Home, Office" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Street</label>
+                  <Input name="street" value={addressForm.street} onChange={handleAddressChange} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">City</label>
+                  <Input name="city" value={addressForm.city} onChange={handleAddressChange} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">State</label>
+                  <Input name="state" value={addressForm.state} onChange={handleAddressChange} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">ZIP</label>
+                  <Input name="zip" value={addressForm.zip} onChange={handleAddressChange} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Country</label>
+                  <Input name="country" value={addressForm.country} onChange={handleAddressChange} required />
+                </div>
+                <DialogFooter>
+                  <Button type="submit" disabled={addressLoading}>{addressLoading ? "Saving..." : "Save"}</Button>
+                  <DialogClose asChild>
+                    <Button type="button" variant="outline">Cancel</Button>
+                  </DialogClose>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+    ),
+    orders: <Orders />,
+    wishlist: <Wishlist />,
+    security: (
+      <div className="p-4 md:p-8">
+        <h2 className="text-2xl font-bold mb-4">Security Settings</h2>
+        <div className="bg-white p-4 md:p-6 rounded shadow mb-4">
+          <div className="font-semibold mb-2">Change Password</div>
+          <Button variant="outline">Change</Button>
+        </div>
+        <div className="bg-white p-4 md:p-6 rounded shadow">
+          <div className="font-semibold mb-2">Two-Factor Authentication</div>
+          <Button variant="outline">Enable</Button>
+        </div>
+      </div>
+    ),
+    reviews: (
+      <div className="p-4 md:p-8">
+        <h2 className="text-2xl font-bold mb-4">Reviews & Ratings</h2>
+        <ul className="space-y-4">
+          <li className="bg-white p-4 rounded shadow">
+            <div className="font-semibold">Running Shoes</div>
+            <div className="text-yellow-500">★★★★☆</div>
+            <div className="text-gray-600 text-sm">"Very comfortable and stylish!"</div>
+          </li>
+          <li className="bg-white p-4 rounded shadow">
+            <div className="font-semibold">Smart Watch</div>
+            <div className="text-yellow-500">★★★☆☆</div>
+            <div className="text-gray-600 text-sm">"Good features but battery life could be better."</div>
+          </li>
+        </ul>
+      </div>
+    ),
+    coupons: (
+      <div className="p-4 md:p-8">
+        <h2 className="text-2xl font-bold mb-4">Coupons & Rewards</h2>
+        <ul className="space-y-4">
+          <li className="bg-white p-4 rounded shadow flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="font-semibold">WELCOME10</div>
+              <div className="text-gray-500 text-sm">10% off on your first order</div>
+            </div>
+            <Button variant="outline" className="mt-2 sm:mt-0">Apply</Button>
+          </li>
+          {/* ...other coupon items... */}
+        </ul>
+      </div>
+    ),
+  };
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
-      {/* Mobile Header */}
-      <div className="lg:hidden bg-white border-b p-4 sticky top-0 z-10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={userInfo.avatar} alt="Profile" />
-              <AvatarFallback className="bg-gray-900 text-white">
-                JD
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                {userInfo.name}
-              </h2>
-              <p className="text-sm text-gray-500">{userInfo.email}</p>
+      {loadingUser ? (
+        <div className="w-full flex justify-center items-center h-96 text-gray-500 text-lg">Loading user info...</div>
+      ) : userError ? (
+        <div className="w-full flex justify-center items-center h-96 text-red-500 text-lg">{userError}</div>
+      ) : !userInfo ? (
+        <div className="w-full flex justify-center items-center h-96 text-gray-500 text-lg">No user info available.</div>
+      ) : (
+        <>
+          {/* Mobile Header */}
+          <div className="lg:hidden bg-white border-b p-4 sticky top-0 z-10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={userInfo.avatar || "/placeholder.svg"} alt="Profile" />
+                  <AvatarFallback className="bg-gray-900 text-white">
+                    {(userInfo.firstName?.[0] || '') + (userInfo.lastName?.[0] || '') || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">{`${userInfo.firstName || ''} ${userInfo.lastName || ''}`}</h2>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
+              </Button>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
-          </Button>
-        </div>
-      </div>
 
-      {/* Mobile Sidebar */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-b shadow-sm">
-          <div className="p-4">
-            <div className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              Account
-            </div>
-            <ul className="mb-6">
-              {menuItems[0].items.map((item) => (
-                <li key={item.id}>
-                  <button
-                    onClick={() => {
-                      setActiveSection(item.id);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`flex items-center w-full px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors
-                      ${activeSection === item.id ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"}`}
+          {/* Mobile Sidebar */}
+          {mobileMenuOpen && (
+            <div className="lg:hidden bg-white border-b shadow-sm">
+              <div className="p-4">
+                <div className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Account
+                </div>
+                <ul className="mb-6">
+                  {menuItems[0].items.map((item) => (
+                    <li key={item.id}>
+                      <button
+                        onClick={() => {
+                          setActiveSection(item.id);
+                          setMobileMenuOpen(false);
+                        }}
+                        className={`flex items-center w-full px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors
+                          ${activeSection === item.id ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"}`}
+                      >
+                        <item.icon className="h-5 w-5 mr-3" />
+                        {item.title}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <div className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Orders & Shopping
+                </div>
+                <ul className="mb-6">
+                  {menuItems[1].items.map((item) => (
+                    <li key={item.id}>
+                      <button
+                        onClick={() => {
+                          setActiveSection(item.id);
+                          setMobileMenuOpen(false);
+                        }}
+                        className={`flex items-center w-full px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors
+                          ${activeSection === item.id ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"}`}
+                      >
+                        <item.icon className="h-5 w-5 mr-3" />
+                        {item.title}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <div className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Account Settings
+                </div>
+                <ul>
+                  {menuItems[2].items.map((item) => (
+                    <li key={item.id}>
+                      <button
+                        onClick={() => {
+                          setActiveSection(item.id);
+                          setMobileMenuOpen(false);
+                        }}
+                        className={`flex items-center w-full px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors
+                          ${activeSection === item.id ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"}`}
+                      >
+                        <item.icon className="h-5 w-5 mr-3" />
+                        {item.title}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-6 pt-6 border-t">
+                  <Button
+                    variant="outline"
+                    className="w-full flex items-center justify-center border-gray-300 text-gray-700 hover:bg-gray-100"
                   >
-                    <item.icon className="h-5 w-5 mr-3" />
-                    {item.title}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <div className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              Orders & Shopping
+                    <LogOut className="h-5 w-5 mr-2" /> Logout
+                  </Button>
+                </div>
+              </div>
             </div>
-            <ul className="mb-6">
-              {menuItems[1].items.map((item) => (
-                <li key={item.id}>
-                  <button
-                    onClick={() => {
-                      setActiveSection(item.id);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`flex items-center w-full px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors
-                      ${activeSection === item.id ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"}`}
-                  >
-                    <item.icon className="h-5 w-5 mr-3" />
-                    {item.title}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <div className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              Account Settings
+          )}
+
+          {/* Desktop Sidebar */}
+          <aside className="hidden lg:block w-72 bg-white border-r flex flex-col h-screen sticky top-0">
+            <div className="p-6 border-b">
+              <div className="flex items-center space-x-3">
+                <Avatar className="h-14 w-14">
+                  <AvatarImage src={userInfo?.avatar || "/placeholder.svg"} alt="Profile" />
+                  <AvatarFallback className="bg-gray-900 text-white">
+                    {(userInfo.firstName?.[0] || '') + (userInfo.lastName?.[0] || '') || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    {`${userInfo.firstName || ''} ${userInfo.lastName || ''}`}
+                  </h2>
+                </div>
+              </div>
             </div>
-            <ul>
-              {menuItems[2].items.map((item) => (
-                <li key={item.id}>
-                  <button
-                    onClick={() => {
-                      setActiveSection(item.id);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`flex items-center w-full px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors
-                      ${activeSection === item.id ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"}`}
-                  >
-                    <item.icon className="h-5 w-5 mr-3" />
-                    {item.title}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-6 pt-6 border-t">
+            <nav className="flex-1 overflow-y-auto py-4">
+              <div className="px-6 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Account
+              </div>
+              <ul className="mb-6">
+                {menuItems[0].items.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      onClick={() => setActiveSection(item.id)}
+                      className={`flex items-center w-full px-6 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors
+                        ${activeSection === item.id ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"}`}
+                    >
+                      <item.icon className="h-5 w-5 mr-3" />
+                      {item.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="px-6 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Orders & Shopping
+              </div>
+              <ul className="mb-6">
+                {menuItems[1].items.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      onClick={() => setActiveSection(item.id)}
+                      className={`flex items-center w-full px-6 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors
+                        ${activeSection === item.id ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"}`}
+                    >
+                      <item.icon className="h-5 w-5 mr-3" />
+                      {item.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="px-6 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Account Settings
+              </div>
+              <ul>
+                {menuItems[2].items.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      onClick={() => setActiveSection(item.id)}
+                      className={`flex items-center w-full px-6 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors
+                        ${activeSection === item.id ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"}`}
+                    >
+                      <item.icon className="h-5 w-5 mr-3" />
+                      {item.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <div className="p-6 border-t">
               <Button
                 variant="outline"
                 className="w-full flex items-center justify-center border-gray-300 text-gray-700 hover:bg-gray-100"
@@ -1106,94 +1380,13 @@ export default function Profile() {
                 <LogOut className="h-5 w-5 mr-2" /> Logout
               </Button>
             </div>
-          </div>
-        </div>
+          </aside>
+          {/* Main Content */}
+          <main className="flex-1 overflow-y-auto">
+            {sectionContent[activeSection]}
+          </main>
+        </>
       )}
-
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-72 bg-white border-r flex flex-col h-screen sticky top-0">
-        <div className="p-6 border-b">
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-14 w-14">
-              <AvatarImage src={userInfo.avatar} alt="Profile" />
-              <AvatarFallback className="bg-gray-900 text-white">
-                JD
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                {userInfo.name}
-              </h2>
-              <p className="text-sm text-gray-500">{userInfo.email}</p>
-            </div>
-          </div>
-        </div>
-        <nav className="flex-1 overflow-y-auto py-4">
-          <div className="px-6 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            Account
-          </div>
-          <ul className="mb-6">
-            {menuItems[0].items.map((item) => (
-              <li key={item.id}>
-                <button
-                  onClick={() => setActiveSection(item.id)}
-                  className={`flex items-center w-full px-6 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors
-                    ${activeSection === item.id ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"}`}
-                >
-                  <item.icon className="h-5 w-5 mr-3" />
-                  {item.title}
-                </button>
-              </li>
-            ))}
-          </ul>
-          <div className="px-6 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            Orders & Shopping
-          </div>
-          <ul className="mb-6">
-            {menuItems[1].items.map((item) => (
-              <li key={item.id}>
-                <button
-                  onClick={() => setActiveSection(item.id)}
-                  className={`flex items-center w-full px-6 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors
-                    ${activeSection === item.id ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"}`}
-                >
-                  <item.icon className="h-5 w-5 mr-3" />
-                  {item.title}
-                </button>
-              </li>
-            ))}
-          </ul>
-          <div className="px-6 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            Account Settings
-          </div>
-          <ul>
-            {menuItems[2].items.map((item) => (
-              <li key={item.id}>
-                <button
-                  onClick={() => setActiveSection(item.id)}
-                  className={`flex items-center w-full px-6 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors
-                    ${activeSection === item.id ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"}`}
-                >
-                  <item.icon className="h-5 w-5 mr-3" />
-                  {item.title}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <div className="p-6 border-t">
-          <Button
-            variant="outline"
-            className="w-full flex items-center justify-center border-gray-300 text-gray-700 hover:bg-gray-100"
-          >
-            <LogOut className="h-5 w-5 mr-2" /> Logout
-          </Button>
-        </div>
-      </aside>
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        {sectionContent[activeSection]}
-      </main>
     </div>
   );
 }

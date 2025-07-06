@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,8 @@ import { Eye, EyeOff, Mail, Lock, User, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+
+const GOOGLE_CLIENT_ID = '801989829243-jur20qvmld2se94mpj24hlvh4ntfcoti.apps.googleusercontent.com';
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -24,6 +26,18 @@ const SignUp = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const baseUrl = "http://localhost:8000";
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      login(token);
+      // Remove token from URL and reload to force Navbar update
+      window.history.replaceState({}, document.title, window.location.pathname);
+      window.location.reload();
+    }
+  }, [login]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -124,6 +138,9 @@ const SignUp = () => {
               <Button
                 variant="outline"
                 className="w-full border-gray-300 text-black hover:bg-gray-50"
+                onClick={() => {
+                  window.location.href = 'http://localhost:8000/api/auth/google';
+                }}
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path
