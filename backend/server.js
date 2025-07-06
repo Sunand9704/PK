@@ -18,6 +18,8 @@ const orderRoutes = require("./routes/orders");
 const dashboardRoutes = require("./routes/dashboard");
 const adminCouponsRoutes = require("./routes/adminCoupons");
 const couponsRoutes = require("./routes/coupons");
+const notificationRoutes = require("./routes/notifications");
+const contactRoutes = require("./routes/contact");
 
 // Load env vars
 dotenv.config();
