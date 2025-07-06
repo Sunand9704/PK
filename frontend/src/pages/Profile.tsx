@@ -420,7 +420,7 @@ const Orders: React.FC = () => {
                 </div>
               </div>
               <div className="text-left md:text-right">
-                <div className="font-bold text-lg">${order.price}</div>
+                <div className="font-bold text-lg">₹{order.price}</div>
                 <span
                   className={`inline-block px-2 py-1 text-xs rounded ${getStatusColor(order.status)}`}
                 >
@@ -1098,14 +1098,7 @@ export default function Profile() {
                 </li>
               ))}
             </ul>
-            <div className="mt-6 pt-6 border-t">
-              <Button
-                variant="outline"
-                className="w-full flex items-center justify-center border-gray-300 text-gray-700 hover:bg-gray-100"
-              >
-                <LogOut className="h-5 w-5 mr-2" /> Logout
-              </Button>
-            </div>
+            <div className="mt-6 pt-6 border-t"></div>
           </div>
         </div>
       )}
@@ -1181,14 +1174,7 @@ export default function Profile() {
             ))}
           </ul>
         </nav>
-        <div className="p-6 border-t">
-          <Button
-            variant="outline"
-            className="w-full flex items-center justify-center border-gray-300 text-gray-700 hover:bg-gray-100"
-          >
-            <LogOut className="h-5 w-5 mr-2" /> Logout
-          </Button>
-        </div>
+        <div className="p-6 border-t"></div>
       </aside>
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">

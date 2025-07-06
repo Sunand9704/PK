@@ -22,8 +22,8 @@ const Products = () => {
   );
   const [sortBy, setSortBy] = useState("name");
   const [products, setProducts] = useState([]);
-  // No categories API, use static categories only
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
   // Fallback static categories in case API is not available
@@ -57,29 +57,41 @@ const Products = () => {
   }, [location.search]);
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchAllProducts() {
       setLoading(true);
+      setError(null);
       try {
-        const productsRes = await fetch(`${baseUrl}/api/products`).then((res) =>
-          res.json()
-        );
-        setProducts(productsRes.products || []);
+        // Fetch all products without pagination by setting a high limit
+        const response = await fetch(`${baseUrl}/api/products?limit=1000`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+        const data = await response.json();
+        setProducts(data.products || []);
       } catch (err) {
+        console.error("Error fetching products:", err);
+        setError(err.message);
         setProducts([]);
       } finally {
         setLoading(false);
       }
     }
-    fetchData();
+    fetchAllProducts();
   }, []);
 
   useEffect(() => {
     async function fetchProduct() {
-      const res = await fetch(`${baseUrl}/api/products/${id}`);
-      // ... handle response
+      if (id) {
+        try {
+          const res = await fetch(`${baseUrl}/api/products/${id}`);
+          // Handle individual product fetch if needed
+        } catch (error) {
+          console.error("Error fetching individual product:", error);
+        }
+      }
     }
     fetchProduct();
-  }, [id]);
+  }, [id, baseUrl]);
 
   const cats = fallbackCategories;
   const filteredProducts =
@@ -95,6 +107,8 @@ const Products = () => {
         return b.price - a.price;
       case "rating":
         return b.rating - a.rating;
+      case "soldCount":
+        return (b.soldCount || 0) - (a.soldCount || 0);
       default:
         return a.name.localeCompare(b.name);
     }
@@ -102,8 +116,25 @@ const Products = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-xl">
-        Loading...
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-xl text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-xl text-red-600 mb-4">Error loading products</p>
+          <p className="text-gray-600">{error}</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Try Again
+          </Button>
+        </div>
       </div>
     );
   }
@@ -174,6 +205,7 @@ const Products = () => {
                 <SelectItem value="price-low">Price: Low to High</SelectItem>
                 <SelectItem value="price-high">Price: High to Low</SelectItem>
                 <SelectItem value="rating">Rating</SelectItem>
+                <SelectItem value="soldCount">Most Popular</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -189,22 +221,29 @@ const Products = () => {
         )}
 
         {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {sortedProducts.map((product) => (
-            <ProductCard
-              key={product._id}
-              product={product}
-              pId={product._id}
-            />
-          ))}
-        </div>
-
-        {/* Load More */}
-        <div className="text-center mt-12">
-          <Button variant="outline" className="btn-secondary">
-            Load More Products
-          </Button>
-        </div>
+        {sortedProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {sortedProducts.map((product) => (
+              <ProductCard
+                key={product._id}
+                product={product}
+                pId={product._id}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-xl text-gray-600 mb-4">
+              No products found in this category
+            </p>
+            <Button
+              onClick={() => setSelectedCategory("all")}
+              variant="outline"
+            >
+              View All Products
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

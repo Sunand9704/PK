@@ -5,7 +5,8 @@ import { Heart, Heart as HeartFilled, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "@/components/ui/use-toast";
 import React from "react";
-
+const imgPlaceholderUrl =
+  "https://res.cloudinary.com/dk6rrrwum/image/upload/v1751738007/placeholder_szfmym.svg";
 interface ProductCardProps {
   product: Product;
   pId: string;
@@ -14,6 +15,7 @@ interface ProductCardProps {
 const ProductCard = ({ product, pId }: ProductCardProps) => {
   const { token } = useAuth();
   const [wishlisted, setWishlisted] = React.useState(false);
+  const [imageError, setImageError] = React.useState(false);
 
   React.useEffect(() => {
     if (!token) return;
@@ -113,6 +115,17 @@ const ProductCard = ({ product, pId }: ProductCardProps) => {
     }
   };
 
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
+  const getImageSrc = () => {
+    if (imageError || !product.images || product.images.length === 0) {
+      return imgPlaceholderUrl;
+    }
+    return product.images[0];
+  };
+
   return (
     <Link
       to={`/products/${pId}`}
@@ -120,9 +133,10 @@ const ProductCard = ({ product, pId }: ProductCardProps) => {
     >
       <div className="relative overflow-hidden bg-gray-100 aspect-square mb-4">
         <img
-          src={product.images[0]}
+          src={getImageSrc()}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          onError={handleImageError}
         />
         <button
           className={`absolute top-3 right-3 z-10 bg-white/80 rounded-full p-1 transition-colors ${wishlisted ? "bg-red-100" : "hover:bg-red-100"}`}
@@ -152,11 +166,11 @@ const ProductCard = ({ product, pId }: ProductCardProps) => {
       <div className="space-y-2">
         <h3 className="font-medium text-sm">{product.name}</h3>
         <div className="flex items-center space-x-2">
-          <span className="font-semibold">${product.price}</span>
+          <span className="font-semibold">₹{product.price}</span>
 
           {product.originalPrice && (
             <span className="text-gray-500 line-through text-sm">
-              ${product.originalPrice}
+              ₹{product.originalPrice}
             </span>
           )}
         </div>

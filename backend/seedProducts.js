@@ -24,8 +24,8 @@ const products = [
       "Machine Washable",
     ],
     inStock: true,
-    rating: 4.8,
-    reviews: 124,
+    rating: 0,
+    reviews: 0,
   },
   {
     name: "Slim Fit Chinos",
@@ -41,8 +41,8 @@ const products = [
       "Modern slim-fit chinos that combine comfort with contemporary style.",
     features: ["Slim Fit", "Stretch Fabric", "Side Pockets", "Versatile Style"],
     inStock: true,
-    rating: 4.6,
-    reviews: 89,
+    rating: 0,
+    reviews: 0,
   },
   {
     name: "Leather Wallet",
@@ -62,8 +62,8 @@ const products = [
       "Compact Design",
     ],
     inStock: true,
-    rating: 4.9,
-    reviews: 67,
+    rating: 0,
+    reviews: 0,
   },
   {
     name: "Oxford Dress Shirt",
@@ -84,8 +84,8 @@ const products = [
       "French Seams",
     ],
     inStock: true,
-    rating: 4.7,
-    reviews: 156,
+    rating: 0,
+    reviews: 0,
   },
   {
     name: "Classic Denim Jeans",
@@ -107,8 +107,8 @@ const products = [
       "Durable Stitching",
     ],
     inStock: true,
-    rating: 4.5,
-    reviews: 102,
+    rating: 0,
+    reviews: 0,
   },
   {
     name: "Minimalist Leather Belt",
@@ -128,8 +128,8 @@ const products = [
       "Handcrafted",
     ],
     inStock: true,
-    rating: 4.4,
-    reviews: 41,
+    rating: 0,
+    reviews: 0,
   },
   {
     name: "Performance Polo Shirt",
@@ -151,8 +151,8 @@ const products = [
       "Easy Care",
     ],
     inStock: true,
-    rating: 4.3,
-    reviews: 58,
+    rating: 0,
+    reviews: 0,
   },
   {
     name: "Canvas Backpack",
@@ -172,8 +172,8 @@ const products = [
       "Water Resistant",
     ],
     inStock: true,
-    rating: 4.2,
-    reviews: 33,
+    rating: 0,
+    reviews: 0,
   },
 ];
 
