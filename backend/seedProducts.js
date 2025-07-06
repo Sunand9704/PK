@@ -182,10 +182,8 @@ const seed = async () => {
   try {
    //await Product.deleteMany();
     await Product.insertMany(products);
-    console.log("Database seeded with products!");
     process.exit();
   } catch (err) {
-    console.error(err);
     process.exit(1);
   }
 };
