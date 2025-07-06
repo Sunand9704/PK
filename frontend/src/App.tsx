@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "./components/shared/Navbar";
 import Footer from "./components/shared/Footer";
 import Home from "./pages/Home";
@@ -15,10 +15,9 @@ import NotFound from "./pages/NotFound";
 import Signup from "./pages/Signup";
 import Signin from "./pages/Signin";
 import Profile from "./pages/Profile";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +30,25 @@ function ScrollToTop() {
   return null;
 }
 
+// Custom hook to handle token from URL
+function HandleTokenFromUrl() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
+    if (token) {
+      localStorage.setItem("token", token);
+      login(token); // update AuthContext
+      navigate("/", { replace: true }); // Remove token from URL
+    }
+  }, [location, navigate, login]);
+
+  return null;
+}
+
 const App = () => (
   <AuthProvider>
     <CartProvider>
@@ -39,6 +57,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <Router>
+            <HandleTokenFromUrl />
             <ScrollToTop />
             <div className="min-h-screen flex flex-col">
               <Navbar />

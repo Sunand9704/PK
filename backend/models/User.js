@@ -38,14 +38,35 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: true,
       trim: true,
+    },
+    dateOfBirth: {
+      type: Date,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other", "prefer not to say", ""],
+      default: "",
+    },
+    avatar: {
+      type: String,
+      default: "",
     },
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product",
       },
+    ],
+    addressBook: [
+      {
+        label: { type: String, default: "Home" },
+        street: { type: String, required: true },
+        city: { type: String, required: true },
+        state: { type: String },
+        zip: { type: String },
+        country: { type: String, required: true },
+      }
     ],
   },
   { timestamps: true }

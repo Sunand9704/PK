@@ -46,7 +46,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const [localImages, setLocalImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const baseUrl = "http://localhost:8000";
-  console.log(baseUrl);
   const [rawInputs, setRawInputs] = useState({
     sizes: "",
     colors: "",
