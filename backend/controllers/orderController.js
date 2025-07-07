@@ -111,7 +111,7 @@ exports.createOrder = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
-
+    log("before creating order:");
     // Create the order with additional fields
     const order = new Order({
       productId,
@@ -128,7 +128,8 @@ exports.createOrder = async (req, res, next) => {
     });
 
     await order.save();
-
+    console.log("Order created:", order);
+    
     // Update product soldCount for successful orders (non-cod orders are considered successful immediately)
     if (paymentMethod !== "cod") {
       await updateProductSoldCount(productId, quantity, "increase");
