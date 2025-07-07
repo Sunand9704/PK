@@ -23,4 +23,17 @@ exports.applyCoupon = async (req, res) => {
   } catch (error) {
     res.status(500).json({ msg: error.message });
   }
+};
+
+// Get all active, non-expired coupons
+exports.getAvailableCoupons = async (req, res) => {
+  try {
+    const coupons = await Coupon.find({
+      active: true,
+      expiryDate: { $gt: Date.now() }
+    });
+    res.json(coupons);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
 }; 

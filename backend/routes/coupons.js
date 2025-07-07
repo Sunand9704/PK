@@ -6,4 +6,7 @@ const auth = require("../middleware/auth");
 // Apply a coupon (user)
 router.post("/apply", auth, couponController.applyCoupon);
 
+// Get all active, non-expired coupons (user)
+router.get("/available", auth, couponController.getAvailableCoupons);
+
 module.exports = router; 

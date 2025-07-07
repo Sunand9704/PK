@@ -5,12 +5,12 @@ const auth = require("../middleware/auth");
 // Optionally add admin middleware if needed
 
 // Create a coupon
-router.post("/", auth, adminCouponController.createCoupon);
+router.post("/",  adminCouponController.createCoupon);
 // Update a coupon
-router.patch("/:id", auth, adminCouponController.updateCoupon);
+router.patch("/:id",  adminCouponController.updateCoupon);
 // Delete a coupon
-router.delete("/:id", auth, adminCouponController.deleteCoupon);
+router.delete("/:id",  adminCouponController.deleteCoupon);
 // List all coupons
-router.get("/", auth, adminCouponController.listCoupons);
+router.get("/",  adminCouponController.listCoupons);
 
 module.exports = router; 
