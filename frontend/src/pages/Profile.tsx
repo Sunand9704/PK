@@ -764,6 +764,89 @@ const Orders: React.FC = () => {
   );
 };
 
+const CouponsRewards: React.FC<{ token: string }> = ({ token }) => {
+  const [coupons, setCoupons] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchCoupons = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/coupons/available`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setCoupons(data);
+        } else {
+          toast({ title: "Failed to fetch coupons", variant: "destructive" });
+        }
+      } catch {
+        toast({ title: "Error fetching coupons", variant: "destructive" });
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (token) fetchCoupons();
+  }, [token]);
+
+  const handleCopy = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast({ title: `Copied ${code} to clipboard!` });
+  };
+
+  if (!token) {
+    return <div className="p-4 md:p-8">Please sign in to view your coupons.</div>;
+  }
+  if (loading) {
+    return <div className="p-4 md:p-8">Loading coupons...</div>;
+  }
+  if (coupons.length === 0) {
+    return (
+      <div className="p-4 md:p-8 flex flex-col items-center justify-center min-h-[200px] bg-white rounded shadow">
+        <h3 className="text-xl font-semibold text-gray-700 mb-2 text-center">
+          No coupons or rewards available
+        </h3>
+        <p className="text-gray-500 mb-6 text-center max-w-xs">
+          Check back later for new offers and rewards!
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="p-4 md:p-8">
+      <h2 className="text-2xl font-bold mb-4">Coupons & Rewards</h2>
+      <ul className="space-y-4">
+        {coupons.map((coupon) => (
+          <li key={coupon._id} className="bg-white p-4 rounded shadow flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="font-semibold text-lg">{coupon.code}</div>
+              <div className="text-gray-500 text-sm">
+                {coupon.discountType === "percentage"
+                  ? `${coupon.discountValue}% off`
+                  : `₹${coupon.discountValue} off`} {coupon.minOrderValue ? `on orders above ₹${coupon.minOrderValue}` : ""}
+                {coupon.expiryDate ? ` | Expires: ${new Date(coupon.expiryDate).toLocaleDateString()}` : ""}
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              className="mt-2 sm:mt-0"
+              onClick={() => handleCopy(coupon.code)}
+            >
+              Copy
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 export default function Profile() {
   const [activeSection, setActiveSection] = useState("user-info");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -1404,7 +1487,7 @@ export default function Profile() {
         ) : userReviews.length === 0 ? (
           <div className="text-gray-500">You haven't written any reviews yet.</div>
         ) : (
-        <ul className="space-y-4">
+          <ul className="space-y-4">
             {userReviews.map((review) => (
               <li key={review._id} className="bg-white p-4 rounded shadow flex items-start gap-4">
                 {review.productImage && (
@@ -1558,27 +1641,13 @@ export default function Profile() {
                     </>
                   )}
                 </div>
-          </li>
+              </li>
             ))}
-        </ul>
+          </ul>
         )}
       </div>
     ),
-    coupons: (
-      <div className="p-4 md:p-8">
-        <h2 className="text-2xl font-bold mb-4">Coupons & Rewards</h2>
-        <ul className="space-y-4">
-          <li className="bg-white p-4 rounded shadow flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="font-semibold">WELCOME10</div>
-              <div className="text-gray-500 text-sm">10% off on your first order</div>
-            </div>
-            <Button variant="outline" className="mt-2 sm:mt-0">Apply</Button>
-          </li>
-          {/* ...other coupon items... */}
-        </ul>
-      </div>
-    ),
+    coupons: <CouponsRewards token={token} />,
   };
 
   return (

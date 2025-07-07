@@ -336,12 +336,22 @@ const ProductDetail = () => {
     e.preventDefault();
     setAddressLoading(true);
     try {
+      if (!addressForm.street || !addressForm.city || !addressForm.country) {
+        toast({ title: 'Street, city, and country are required', variant: 'destructive' });
+        setAddressLoading(false);
+        return;
+      }
       const res = await fetch(`${baseUrl}/api/user/address`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(addressForm),
       });
-      if (!res.ok) throw new Error("Failed to add address");
+      if (!res.ok) {
+        const data = await res.json();
+        toast({ title: data.msg || 'Failed to add address', variant: 'destructive' });
+        setAddressLoading(false);
+        return;
+      }
       const data = await res.json();
       setAddresses(data.addressBook || []);
       setSelectedAddressIndex((data.addressBook || []).length - 1);
@@ -353,7 +363,6 @@ const ProductDetail = () => {
       setAddressLoading(false);
     }
   };
-
   const selectedAddress = selectedAddressIndex !== null ? addresses[selectedAddressIndex] : null;
 
   useEffect(() => {
