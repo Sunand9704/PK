@@ -27,7 +27,7 @@ const SignUp = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
+    const token = params.get("token");
     if (token) {
       login(token);
       // Remove token from URL and reload to force Navbar update
@@ -131,7 +131,6 @@ const SignUp = () => {
           </CardHeader>
 
           <CardContent className="space-y-4">
-
             {/* Name Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -317,7 +316,10 @@ const SignUp = () => {
             {/* Sign In Link */}
             <p className="text-center text-sm text-gray-600">
               Already have an account?{" "}
-              <a href="#" className="text-black hover:underline font-medium">
+              <a
+                href="/signin"
+                className="text-black hover:underline font-medium"
+              >
                 Sign in
               </a>
             </p>

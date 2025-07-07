@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Admin = require("../models/Admin");
 const { validationResult } = require("express-validator");
 const generateToken = require("../utils/generateToken");
 const nodemailer = require("nodemailer");
@@ -20,6 +21,22 @@ exports.registerUser = async (req, res, next) => {
     }
     user = new User({ firstName, lastName, email, password, phone });
     await user.save();
+
+    // Create notification for new user registration
+    try {
+      const Notification = require("../models/Notification");
+      await Notification.create({
+        type: "user_registration",
+        title: "New User Registration",
+        message: `${firstName} ${lastName} registered a new account`,
+        priority: "high",
+        relatedId: user._id,
+        relatedModel: "User",
+      });
+    } catch (error) {
+      console.error("Error creating notification:", error);
+    }
+
     const token = generateToken(user._id);
     res.status(201).json({ token });
   } catch (error) {
@@ -56,7 +73,8 @@ exports.loginUser = async (req, res, next) => {
 exports.forgotPassword = async (req, res, next) => {
   const { email } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const user =
+      (await User.findOne({ email })) || (await Admin.findOne({ email }));
     if (!user) {
       return res
         .status(404)
@@ -65,6 +83,7 @@ exports.forgotPassword = async (req, res, next) => {
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.resetPasswordOtp = otp;
+
     user.resetPasswordOtpExpires = Date.now() + 10 * 60 * 1000; // 10 min
     await user.save();
     // Send OTP email
@@ -101,7 +120,8 @@ exports.forgotPassword = async (req, res, next) => {
 exports.verifyOtp = async (req, res, next) => {
   const { email, otp } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const user =
+      (await User.findOne({ email })) || (await Admin.findOne({ email }));
     if (!user || !user.resetPasswordOtp || !user.resetPasswordOtpExpires) {
       return res
         .status(400)
@@ -123,7 +143,8 @@ exports.verifyOtp = async (req, res, next) => {
 exports.resetPassword = async (req, res, next) => {
   const { email, otp, password } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const user =
+      (await User.findOne({ email })) || (await Admin.findOne({ email }));
     if (!user || !user.resetPasswordOtp || !user.resetPasswordOtpExpires) {
       return res
         .status(400)

@@ -2,6 +2,22 @@ import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+// Add custom CSS for object-inherit
+const customStyles = `
+  @media (min-width: 768px) {
+    .md\\:object-inherit {
+      object-fit: inherit !important;
+    }
+  }
+`;
+
+// Inject the styles
+if (typeof document !== "undefined") {
+  const styleElement = document.createElement("style");
+  styleElement.textContent = customStyles;
+  document.head.appendChild(styleElement);
+}
+
 const slides = [
   {
     id: 1,
@@ -9,6 +25,7 @@ const slides = [
     subtitle: "Premium Men's Fashion",
     description:
       "Discover our latest collection of premium shirts, pants, and accessories",
+    customContent: "Manalli Appedhi Yavadu Ra",
     image:
       "https://res.cloudinary.com/dnbqgzh4t/image/upload/v1750787984/1401349_k7aefm.jpg",
     cta: "Shop Now",
@@ -62,7 +79,7 @@ const HeroCarousel = () => {
       {slides.map((slide, index) => (
         <div
           key={slide.id}
-          className={`absolute inset-0 transition-transform duration-700 ease-in-out ${
+          className={`absolute inset-0 transition-transform duration-3000 ease-in-out ${
             index === currentSlide
               ? "translate-x-0"
               : index < currentSlide
@@ -73,8 +90,23 @@ const HeroCarousel = () => {
           <img
             src={slide.image}
             alt={slide.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover md:object-contain"
+            style={{
+              objectFit: window.innerWidth >= 768 ? "inherit" : "cover",
+            }}
           />
+
+          {/* Custom Content Overlay for first slide */}
+          {slide.customContent && (
+            <div className="absolute inset-0 flex items-end justify-center pb-8">
+              <div className="bg-gradient-to-r from-purple-600/80 via-blue-600/80 to-indigo-600/80 backdrop-blur-sm rounded-xl p-4 mx-4 max-w-xs md:max-w-lg text-center shadow-xl border border-white/20">
+                <h2 className="text-lg md:text-3xl font-bold text-white mb-2 tracking-wide">
+                  {slide.customContent}
+                </h2>
+                <div className="w-16 h-0.5 bg-gradient-to-r from-yellow-400 to-orange-400 mx-auto rounded-full"></div>
+              </div>
+            </div>
+          )}
         </div>
       ))}
 

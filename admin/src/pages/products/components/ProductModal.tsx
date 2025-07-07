@@ -52,7 +52,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     features: "",
   });
   const [loading, setLoading] = useState(false);
-  const getToken = () => localStorage.getItem('admin_token');
+  const getToken = () => localStorage.getItem("admin_token");
 
   useEffect(() => {
     if (product) {
@@ -209,9 +209,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         // Update
         res = await fetch(`${baseUrl}/api/admin/products/${product._id}`, {
           method: "PUT",
-          headers: { 
-            'Authorization': `Bearer ${getToken()}`,
-            "Content-Type": "application/json" },
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(productData),
           credentials: "include",
         });
@@ -219,9 +220,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         // Create
         res = await fetch(`${baseUrl}/api/admin/products`, {
           method: "POST",
-          headers: { 
-            'Authorization': `Bearer ${getToken()}`,
-            "Content-Type": "application/json" },
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(productData),
           credentials: "include",
         });
@@ -298,7 +300,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">Price ($)</Label>
+              <Label htmlFor="price">Price (₹)</Label>
               <Input
                 id="price"
                 type="number"
@@ -310,7 +312,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="originalPrice">Original Price ($)</Label>
+              <Label htmlFor="originalPrice">Original Price (₹)</Label>
               <Input
                 id="originalPrice"
                 type="number"
