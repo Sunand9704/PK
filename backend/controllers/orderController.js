@@ -128,7 +128,7 @@ exports.createOrder = async (req, res, next) => {
     });
 
     await order.save();
-    console.log("Order created:", order);
+
     
     // Update product soldCount for successful orders (non-cod orders are considered successful immediately)
     if (paymentMethod !== "cod") {
