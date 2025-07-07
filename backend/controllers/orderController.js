@@ -129,6 +129,7 @@ exports.createOrder = async (req, res, next) => {
 
     await order.save();
 
+
     // Create notification for new order
     try {
       const Notification = require("../models/Notification");
@@ -148,6 +149,7 @@ exports.createOrder = async (req, res, next) => {
     } catch (error) {
       console.error("Error creating notification:", error);
     }
+
 
     // Update product soldCount for successful orders (non-cod orders are considered successful immediately)
     if (paymentMethod !== "cod") {

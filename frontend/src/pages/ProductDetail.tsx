@@ -64,6 +64,17 @@ const ProductDetail = () => {
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
   const [orderLoading, setOrderLoading] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponApplied, setCouponApplied] = useState(false);
+  const [couponError, setCouponError] = useState("");
+  const [couponSuccess, setCouponSuccess] = useState("");
+
+  // Address book state
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [selectedAddressIndex, setSelectedAddressIndex] = useState<number | null>(null);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [addressForm, setAddressForm] = useState({ label: '', street: '', city: '', state: '', zip: '', country: '' });
+  const [addressLoading, setAddressLoading] = useState(false);
 
   const imgPlaceholderUrl =
     "https://res.cloudinary.com/dk6rrrwum/image/upload/v1751738007/placeholder_szfmym.svg";
@@ -170,6 +181,8 @@ const ProductDetail = () => {
 
     setOrderLoading(true);
     try {
+      console.log(product._id);
+      
       const response = await fetch(`${baseUrl}/api/orders`, {
         method: "POST",
         headers: {
@@ -289,6 +302,73 @@ const ProductDetail = () => {
       setPaymentDialogOpen(false);
     }
   };
+
+  const applyCoupon = () => {
+    // Implement coupon application logic here
+    setCouponApplied(true);
+    setCouponSuccess("Coupon applied successfully!");
+  };
+
+  // Fetch address book when dialog opens
+  useEffect(() => {
+    if (checkoutOpen && token) {
+      fetch(`${baseUrl}/api/user/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(res => res.json())
+        .then(data => {
+          setAddresses(data.addressBook || []);
+          setSelectedAddressIndex(data.addressBook && data.addressBook.length > 0 ? 0 : null);
+        });
+    }
+  }, [checkoutOpen, token]);
+
+  const handleSelectAddress = (idx: number) => {
+    setSelectedAddressIndex(idx);
+    setShowAddressForm(false);
+  };
+
+  const handleAddressFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAddressForm({ ...addressForm, [e.target.name]: e.target.value });
+  };
+
+  const handleAddressFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddressLoading(true);
+    try {
+      const res = await fetch(`${baseUrl}/api/user/address`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(addressForm),
+      });
+      if (!res.ok) throw new Error("Failed to add address");
+      const data = await res.json();
+      setAddresses(data.addressBook || []);
+      setSelectedAddressIndex((data.addressBook || []).length - 1);
+      setShowAddressForm(false);
+      setAddressForm({ label: '', street: '', city: '', state: '', zip: '', country: '' });
+    } catch (err) {
+      toast({ title: err instanceof Error ? err.message : 'Error adding address', variant: 'destructive' });
+    } finally {
+      setAddressLoading(false);
+    }
+  };
+
+  const selectedAddress = selectedAddressIndex !== null ? addresses[selectedAddressIndex] : null;
+
+  useEffect(() => {
+    if (selectedAddress) {
+      setForm((f) => ({
+        ...f,
+        name: selectedAddress.label || "",
+        address: selectedAddress.street || "",
+        city: selectedAddress.city || "",
+        state: selectedAddress.state || "",
+        zip: selectedAddress.zip || "",
+        country: selectedAddress.country || "",
+      }));
+    }
+  }, [selectedAddressIndex]);
 
   if (loading) {
     return (
@@ -511,119 +591,62 @@ const ProductDetail = () => {
                   </div>
 
                   {/* Shipping Address */}
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2 text-black">
-                      Shipping Address
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Full Name
-                        </label>
-                        <Input
-                          placeholder="Full Name"
-                          value={form.name}
-                          onChange={(e) =>
-                            setForm((f) => ({ ...f, name: e.target.value }))
-                          }
-                          onBlur={() => handleBlur("name")}
-                          className={
-                            touched.name && !form.name ? "border-red-500" : ""
-                          }
-                          required
-                        />
+                  {addresses.length > 0 && !showAddressForm && (
+                    <div className="mb-6">
+                      <h3 className="font-bold text-lg mb-3 text-black">Choose Shipping Address</h3>
+                      <div className="space-y-3">
+                        {addresses.map((addr, idx) => (
+                          <div
+                            key={idx}
+                            className={`p-4 rounded-lg border-2 transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md bg-white ${selectedAddressIndex === idx ? 'border-blue-600 bg-blue-50 shadow' : 'border-gray-200'}`}
+                            onClick={() => handleSelectAddress(idx)}
+                          >
+                            <div>
+                              <div className="font-semibold text-base flex items-center gap-2">
+                                <span className="w-5 h-5 text-blue-600">🏠</span>
+                                {addr.label || 'Address'}
+                              </div>
+                              <div className="text-gray-700 text-sm mt-1">
+                                {addr.street}, {addr.city}, {addr.state}, {addr.zip}, {addr.country}
+                              </div>
+                            </div>
+                            {selectedAddressIndex === idx && (
+                              <span className="w-6 h-6 text-blue-600">✔️</span>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Address
-                        </label>
-                        <Input
-                          placeholder="Address"
-                          value={form.address}
-                          onChange={(e) =>
-                            setForm((f) => ({ ...f, address: e.target.value }))
-                          }
-                          onBlur={() => handleBlur("address")}
-                          className={
-                            touched.address && !form.address
-                              ? "border-red-500"
-                              : ""
-                          }
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          City
-                        </label>
-                        <Input
-                          placeholder="City"
-                          value={form.city}
-                          onChange={(e) =>
-                            setForm((f) => ({ ...f, city: e.target.value }))
-                          }
-                          onBlur={() => handleBlur("city")}
-                          className={
-                            touched.city && !form.city ? "border-red-500" : ""
-                          }
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          State
-                        </label>
-                        <Input
-                          placeholder="State"
-                          value={form.state}
-                          onChange={(e) =>
-                            setForm((f) => ({ ...f, state: e.target.value }))
-                          }
-                          onBlur={() => handleBlur("state")}
-                          className={
-                            touched.state && !form.state ? "border-red-500" : ""
-                          }
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          ZIP Code
-                        </label>
-                        <Input
-                          placeholder="ZIP Code"
-                          value={form.zip}
-                          onChange={(e) =>
-                            setForm((f) => ({ ...f, zip: e.target.value }))
-                          }
-                          onBlur={() => handleBlur("zip")}
-                          className={
-                            touched.zip && !form.zip ? "border-red-500" : ""
-                          }
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Country
-                        </label>
-                        <Input
-                          placeholder="Country"
-                          value={form.country}
-                          onChange={(e) =>
-                            setForm((f) => ({ ...f, country: e.target.value }))
-                          }
-                          onBlur={() => handleBlur("country")}
-                          className={
-                            touched.country && !form.country
-                              ? "border-red-500"
-                              : ""
-                          }
-                          required
-                        />
-                      </div>
+                      <Button type="button" className="mt-5 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all" onClick={() => setShowAddressForm(true)}>
+                        + Add New Address
+                      </Button>
                     </div>
-                  </div>
+                  )}
+                  {showAddressForm && (
+                    <form onSubmit={handleAddressFormSubmit} className="space-y-4 p-4 bg-gray-50 rounded-lg shadow-md border border-gray-200 animate-fade-in">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-xl font-bold text-black">Add New Address</h3>
+                        <button type="button" onClick={() => setShowAddressForm(false)} className="text-gray-500 hover:text-black">✖️</button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <Input name="label" placeholder="Label (e.g. Home, Work)" value={addressForm.label} onChange={handleAddressFormChange} />
+                        <Input name="street" placeholder="Street" value={addressForm.street} onChange={handleAddressFormChange} required />
+                        <Input name="city" placeholder="City" value={addressForm.city} onChange={handleAddressFormChange} required />
+                        <Input name="state" placeholder="State" value={addressForm.state} onChange={handleAddressFormChange} />
+                        <Input name="zip" placeholder="ZIP Code" value={addressForm.zip} onChange={handleAddressFormChange} />
+                        <Input name="country" placeholder="Country" value={addressForm.country} onChange={handleAddressFormChange} required />
+                      </div>
+                      <div className="flex gap-2 mt-4">
+                        <Button type="submit" disabled={addressLoading} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all">{addressLoading ? 'Saving...' : 'Save Address'}</Button>
+                        <Button type="button" variant="outline" onClick={() => setShowAddressForm(false)} className="border-gray-300">Cancel</Button>
+                      </div>
+                    </form>
+                  )}
+                  {addresses.length === 0 && !showAddressForm && (
+                    <Button type="button" onClick={() => setShowAddressForm(true)} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all">
+                      + Add Shipping Address
+                    </Button>
+                  )}
+
                   {/* Contact Info */}
                   <div>
                     <h3 className="font-semibold text-lg mb-2 text-black">
@@ -679,6 +702,35 @@ const ProductDetail = () => {
                         setForm((f) => ({ ...f, notes: e.target.value }))
                       }
                     />
+                  </div>
+                  {/* Coupon Code */}
+                  <div className="mb-6">
+                    <div className="flex space-x-2">
+                      <div className="flex-1 relative">
+                        <Input
+                          type="text"
+                          placeholder="Coupon code"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value)}
+                          className="pl-3 border-gray-300 focus:border-black"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={applyCoupon}
+                        variant="outline"
+                        className="border-black text-black hover:bg-black hover:text-white"
+                        disabled={couponApplied}
+                      >
+                        {couponApplied ? "Applied" : "Apply"}
+                      </Button>
+                    </div>
+                    {couponError && (
+                      <p className="text-sm text-red-600 mt-2">{couponError}</p>
+                    )}
+                    {couponSuccess && (
+                      <p className="text-sm text-green-600 mt-2">✓ {couponSuccess}</p>
+                    )}
                   </div>
                   {checkoutError && (
                     <div className="text-red-500 text-sm text-center font-medium">
