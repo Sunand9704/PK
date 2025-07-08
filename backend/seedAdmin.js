@@ -28,11 +28,6 @@ const seed = async () => {
       const admin = new Admin(adminData);
       await admin.save();
     }
-    console.log("Database seeded with admin users!");
-    console.log("Admin credentials:");
-    adminUsers.forEach((admin) => {
-      console.log(`Email: ${admin.email}, Password: ${admin.password}`);
-    });
     process.exit();
   } catch (err) {
     console.error(err);

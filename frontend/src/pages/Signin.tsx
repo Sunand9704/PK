@@ -70,7 +70,7 @@ const SignIn = () => {
         setSuccess("Signed in successfully! Redirecting...");
         setTimeout(() => navigate("/"), 1200);
       } else {
-        setError(data.errors?.[0]?.msg || "Login failed");
+        setError(data.message || data.errors?.[0]?.msg || "Login failed");
       }
     } catch (err) {
       setError("Network error");

@@ -56,11 +56,9 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
       if (response.ok) {
         const data = await response.json();
         setNotifications(data.notifications || []);
-      } else {
-        console.error("Failed to fetch notifications");
       }
     } catch (error) {
-      console.error("Error fetching notifications:", error);
+      // No console.error here
     } finally {
       setLoading(false);
     }
@@ -90,7 +88,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
         );
       }
     } catch (error) {
-      console.error("Error fetching unread count:", error);
+      // No console.error here
     }
   };
 
@@ -116,7 +114,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
         );
       }
     } catch (error) {
-      console.error("Error marking notification as read:", error);
+      // No console.error here
     }
   };
 
@@ -141,7 +139,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
         );
       }
     } catch (error) {
-      console.error("Error marking all notifications as read:", error);
+      // No console.error here
     }
   };
 

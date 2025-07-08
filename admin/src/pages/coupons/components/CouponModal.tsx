@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 
 import {
@@ -41,6 +40,7 @@ export const CouponModal: React.FC<CouponModalProps> = ({
     minOrderAmount: "",
   });
   const { toast } = useToast();
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     if (coupon) {
@@ -66,8 +66,42 @@ export const CouponModal: React.FC<CouponModalProps> = ({
     }
   }, [coupon]);
 
+  const validate = () => {
+    const newErrors: { [key: string]: string } = {};
+    if (!formData.code || formData.code.trim().length < 3) {
+      newErrors.code = "Coupon code is required (min 3 chars)";
+    }
+    if (!formData.type || (formData.type !== "percentage" && formData.type !== "fixed")) {
+      newErrors.type = "Discount type is required";
+    }
+    if (!formData.discount || isNaN(Number(formData.discount)) || Number(formData.discount) <= 0) {
+      newErrors.discount = "Valid discount value is required";
+    } else if (formData.type === "percentage" && (Number(formData.discount) > 100)) {
+      newErrors.discount = "Percentage discount cannot exceed 100%";
+    }
+    if (!formData.usageLimit || isNaN(Number(formData.usageLimit)) || Number(formData.usageLimit) < 1) {
+      newErrors.usageLimit = "Usage limit is required and must be a positive number";
+    }
+    if (!formData.minOrderAmount || isNaN(Number(formData.minOrderAmount)) || Number(formData.minOrderAmount) < 0) {
+      newErrors.minOrderAmount = "Minimum order amount is required and must be a positive number";
+    }
+    if (!formData.expiryDate) {
+      newErrors.expiryDate = "Expiry date is required";
+    }
+    if (!formData.description || formData.description.length > 300) {
+      newErrors.description = !formData.description ? "Description is required" : "Description too long (max 300 chars)";
+    }
+    return newErrors;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const validationErrors = validate();
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) {
+      return;
+    }
 
     const token = localStorage.getItem('token');
     const payload = {
@@ -134,6 +168,7 @@ export const CouponModal: React.FC<CouponModalProps> = ({
                 placeholder="SAVE20"
                 required
               />
+              {errors.code && <div className="text-red-500 text-xs">{errors.code}</div>}
             </div>
 
             <div className="space-y-2">
@@ -150,6 +185,7 @@ export const CouponModal: React.FC<CouponModalProps> = ({
                   <SelectItem value="fixed">Fixed Amount</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.type && <div className="text-red-500 text-xs">{errors.type}</div>}
             </div>
 
             <div className="space-y-2">
@@ -164,6 +200,7 @@ export const CouponModal: React.FC<CouponModalProps> = ({
                 placeholder={formData.type === "percentage" ? "20" : "50"}
                 required
               />
+              {errors.discount && <div className="text-red-500 text-xs">{errors.discount}</div>}
             </div>
 
             <div className="space-y-2">
@@ -176,7 +213,9 @@ export const CouponModal: React.FC<CouponModalProps> = ({
                   handleInputChange("usageLimit", e.target.value)
                 }
                 placeholder="100"
+                required
               />
+              {errors.usageLimit && <div className="text-red-500 text-xs">{errors.usageLimit}</div>}
             </div>
 
             <div className="space-y-2">
@@ -190,7 +229,9 @@ export const CouponModal: React.FC<CouponModalProps> = ({
                   handleInputChange("minOrderAmount", e.target.value)
                 }
                 placeholder="0.00"
+                required
               />
+              {errors.minOrderAmount && <div className="text-red-500 text-xs">{errors.minOrderAmount}</div>}
             </div>
 
             <div className="space-y-2">
@@ -204,6 +245,7 @@ export const CouponModal: React.FC<CouponModalProps> = ({
                 }
                 required
               />
+              {errors.expiryDate && <div className="text-red-500 text-xs">{errors.expiryDate}</div>}
             </div>
           </div>
 
@@ -215,7 +257,9 @@ export const CouponModal: React.FC<CouponModalProps> = ({
               onChange={(e) => handleInputChange("description", e.target.value)}
               placeholder="Coupon description..."
               rows={3}
+              required
             />
+            {errors.description && <div className="text-red-500 text-xs">{errors.description}</div>}
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

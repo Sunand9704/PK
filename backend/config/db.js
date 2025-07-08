@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
+require("dotenv").config();
 
 const connectDB = async () => {
   try {
     const dbUrl =
-      process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/PK-TRENDS";
+      process.env.MONGODB_URI ;
     const conn = await mongoose.connect(dbUrl, {
       useNewUrlParser: true,
       useUnifiedTopology: true,

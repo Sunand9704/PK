@@ -57,7 +57,6 @@ const Home = () => {
         setCategories(categoriesRes.categories || fallbackCategories);
         setReviews(reviewsRes.reviews || []);
       } catch (err) {
-        console.error("Error fetching data:", err);
         setProducts([]);
         setCategories(fallbackCategories);
         setReviews([]);
@@ -99,8 +98,8 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {cats.map((category) => (
               <a
-                key={category.id}
-                href={`#category-${category.id}`}
+                key={category.name}
+                href={`#category-${category.name}`}
                 className="group cursor-pointer block"
               >
                 <div className="relative overflow-hidden aspect-[4/3] bg-gray-100 mb-4">
@@ -133,13 +132,13 @@ const Home = () => {
           {cats.map((category) => {
             // Filter products for this category and sort by soldCount (highest first)
             const categoryProducts = products
-              .filter((product) => product.category === category.id)
+              .filter((product) => product.category === category.name)
               .sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0))
               .slice(0, 4);
             return (
               <div
-                key={category.id}
-                id={`category-${category.id}`}
+                key={category.name}
+                id={`category-${category.name}`}
                 className="p-0 scroll-mt-24 min-h-screen flex flex-col justify-center"
               >
                 <h2 className="text-3xl font-bold mb-6 text-center">
@@ -160,7 +159,7 @@ const Home = () => {
                   ))}
                 </div>
                 <div className="text-center">
-                  <Link to={`/products?category=${category.id}`}>
+                  <Link to={`/products?category=${category.name}`}>
                     <Button className="bg-black text-white hover:bg-gray-800 px-8 py-3 text-lg">
                       Shop All
                     </Button>

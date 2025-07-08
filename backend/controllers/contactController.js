@@ -26,15 +26,6 @@ exports.sendContactEmail = async (req, res, next) => {
 
     // Check if email credentials are configured
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.log("Contact form submission:", {
-        firstName,
-        lastName,
-        email,
-        subject,
-        message,
-        timestamp: new Date().toISOString(),
-      });
-
       return res.status(200).json({
         success: true,
         message: "Your message has been received! We'll get back to you soon.",

@@ -58,7 +58,6 @@ const Navbar = () => {
         const data = await response.json();
         setSearchResults(data.products || []);
       } catch (error) {
-        console.error("Search error:", error);
         setSearchResults([]);
       } finally {
         setIsSearching(false);

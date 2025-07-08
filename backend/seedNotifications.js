@@ -69,7 +69,6 @@ const seed = async () => {
 
     // Insert new notifications
     await Notification.insertMany(notifications);
-    console.log("Database seeded with notifications!");
     process.exit();
   } catch (err) {
     console.error(err);

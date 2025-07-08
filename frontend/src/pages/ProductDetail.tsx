@@ -195,8 +195,6 @@ const ProductDetail = () => {
 
     setOrderLoading(true);
     try {
-      console.log(product._id);
-
       const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ORDERS}`, {
         method: "POST",
         headers: {
@@ -236,7 +234,6 @@ const ProductDetail = () => {
 
       return true;
     } catch (error) {
-      console.error("Error creating order:", error);
       toast({
         title: "Failed to place order",
         description:
@@ -283,7 +280,7 @@ const ProductDetail = () => {
     document.body.appendChild(script);
     script.onload = async () => {
       const options = {
-        key: import.meta.env.RAZOR_PAY_KEY, // Razorpay test key
+        key: import.meta.env.VITE_RAZOR_PAY_KEY, // Razorpay test key
         amount: Math.round(product.price * quantity * 100),
         currency: "INR",
         name: "PK Trends",
@@ -676,8 +673,7 @@ const ProductDetail = () => {
                     </div>
                   )}
                   {showAddressForm && (
-                    <form
-                      onSubmit={handleAddressFormSubmit}
+                    <div
                       className="space-y-4 p-4 bg-gray-50 rounded-lg shadow-md border border-gray-200 animate-fade-in"
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -735,9 +731,10 @@ const ProductDetail = () => {
                       </div>
                       <div className="flex gap-2 mt-4">
                         <Button
-                          type="submit"
+                          type="button"
                           disabled={addressLoading}
                           className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all"
+                          onClick={handleAddressFormSubmit}
                         >
                           {addressLoading ? "Saving..." : "Save Address"}
                         </Button>
@@ -750,7 +747,7 @@ const ProductDetail = () => {
                           Cancel
                         </Button>
                       </div>
-                    </form>
+                    </div>
                   )}
                   {addresses.length === 0 && !showAddressForm && (
                     <Button

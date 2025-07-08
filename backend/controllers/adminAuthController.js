@@ -17,7 +17,7 @@ exports.registerAdmin = async (req, res, next) => {
     if (admin) {
       return res
         .status(400)
-        .json({ errors: [{ msg: "Admin already exists" }] });
+        .json({ success: false, message: "Email already exists." });
     }
     admin = new Admin({ name, email, password });
     await admin.save();
@@ -40,13 +40,16 @@ exports.loginAdmin = async (req, res, next) => {
   
   try {
     const admin = await Admin.findOne({ email });
+
     if (!admin) {
-      return res.status(400).json({ errors: [{ msg: "Invalid credentials" }] });
+      return res.status(400).json({ success: false, message: "Invalid email." });
     }
+
     const isMatch = await admin.matchPassword(password);
     if (!isMatch) {
-      return res.status(400).json({ errors: [{ msg: "Invalid credentials" }] });
+      return res.status(400).json({ success: false, message: "Invalid password." });
     }
+
     const token = generateToken(admin._id);
     res.json({ token });
   } catch (error) {
