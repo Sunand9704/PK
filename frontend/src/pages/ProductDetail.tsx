@@ -17,10 +17,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -71,9 +72,18 @@ const ProductDetail = () => {
 
   // Address book state
   const [addresses, setAddresses] = useState<any[]>([]);
-  const [selectedAddressIndex, setSelectedAddressIndex] = useState<number | null>(null);
+  const [selectedAddressIndex, setSelectedAddressIndex] = useState<
+    number | null
+  >(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [addressForm, setAddressForm] = useState({ label: '', street: '', city: '', state: '', zip: '', country: '' });
+  const [addressForm, setAddressForm] = useState({
+    label: "",
+    street: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "",
+  });
   const [addressLoading, setAddressLoading] = useState(false);
 
   const imgPlaceholderUrl =
@@ -84,14 +94,16 @@ const ProductDetail = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${baseUrl}/api/products/${id}`);
+        const res = await fetch(
+          `${API_BASE_URL}${API_ENDPOINTS.PRODUCT_DETAIL(id)}`
+        );
         if (!res.ok) throw new Error("Product not found");
         const data = await res.json();
         setProduct(data);
         // Fetch related products by category
         if (data.category) {
           const relRes = await fetch(
-            `${baseUrl}/api/products/category/${data.category}`
+            `${API_BASE_URL}/api/products/category/${data.category}`
           );
           if (relRes.ok) {
             const relData = await relRes.json();
@@ -105,7 +117,9 @@ const ProductDetail = () => {
         }
 
         // Fetch product reviews
-        const reviewsRes = await fetch(`${baseUrl}/api/reviews/${id}`);
+        const reviewsRes = await fetch(
+          `${API_BASE_URL}${API_ENDPOINTS.REVIEW_DETAIL(id)}`
+        );
         if (reviewsRes.ok) {
           const reviewsData = await reviewsRes.json();
           setProductReviews(reviewsData.reviews || []);
@@ -114,7 +128,7 @@ const ProductDetail = () => {
         // Fetch user's review if authenticated
         if (isAuthenticated && token) {
           const userReviewRes = await fetch(
-            `${baseUrl}/api/reviews/${id}/user`,
+            `${API_BASE_URL}/api/reviews/${id}/user`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -182,8 +196,8 @@ const ProductDetail = () => {
     setOrderLoading(true);
     try {
       console.log(product._id);
-      
-      const response = await fetch(`${baseUrl}/api/orders`, {
+
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ORDERS}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -269,7 +283,7 @@ const ProductDetail = () => {
     document.body.appendChild(script);
     script.onload = async () => {
       const options = {
-        key: "rzp_test_1DP5mmOlF5G5ag", // Razorpay test key
+        key: import.meta.env.RAZOR_PAY_KEY, // Razorpay test key
         amount: Math.round(product.price * quantity * 100),
         currency: "INR",
         name: "PK Trends",
@@ -312,13 +326,15 @@ const ProductDetail = () => {
   // Fetch address book when dialog opens
   useEffect(() => {
     if (checkoutOpen && token) {
-      fetch(`${baseUrl}/api/user/profile`, {
+      fetch(`${API_BASE_URL}${API_ENDPOINTS.USER_PROFILE}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           setAddresses(data.addressBook || []);
-          setSelectedAddressIndex(data.addressBook && data.addressBook.length > 0 ? 0 : null);
+          setSelectedAddressIndex(
+            data.addressBook && data.addressBook.length > 0 ? 0 : null
+          );
         });
     }
   }, [checkoutOpen, token]);
@@ -337,18 +353,27 @@ const ProductDetail = () => {
     setAddressLoading(true);
     try {
       if (!addressForm.street || !addressForm.city || !addressForm.country) {
-        toast({ title: 'Street, city, and country are required', variant: 'destructive' });
+        toast({
+          title: "Street, city, and country are required",
+          variant: "destructive",
+        });
         setAddressLoading(false);
         return;
       }
-      const res = await fetch(`${baseUrl}/api/user/address`, {
+      const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.USER_ADDRESS}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(addressForm),
       });
       if (!res.ok) {
         const data = await res.json();
-        toast({ title: data.msg || 'Failed to add address', variant: 'destructive' });
+        toast({
+          title: data.msg || "Failed to add address",
+          variant: "destructive",
+        });
         setAddressLoading(false);
         return;
       }
@@ -356,14 +381,25 @@ const ProductDetail = () => {
       setAddresses(data.addressBook || []);
       setSelectedAddressIndex((data.addressBook || []).length - 1);
       setShowAddressForm(false);
-      setAddressForm({ label: '', street: '', city: '', state: '', zip: '', country: '' });
+      setAddressForm({
+        label: "",
+        street: "",
+        city: "",
+        state: "",
+        zip: "",
+        country: "",
+      });
     } catch (err) {
-      toast({ title: err instanceof Error ? err.message : 'Error adding address', variant: 'destructive' });
+      toast({
+        title: err instanceof Error ? err.message : "Error adding address",
+        variant: "destructive",
+      });
     } finally {
       setAddressLoading(false);
     }
   };
-  const selectedAddress = selectedAddressIndex !== null ? addresses[selectedAddressIndex] : null;
+  const selectedAddress =
+    selectedAddressIndex !== null ? addresses[selectedAddressIndex] : null;
 
   useEffect(() => {
     if (selectedAddress) {
@@ -602,21 +638,26 @@ const ProductDetail = () => {
                   {/* Shipping Address */}
                   {addresses.length > 0 && !showAddressForm && (
                     <div className="mb-6">
-                      <h3 className="font-bold text-lg mb-3 text-black">Choose Shipping Address</h3>
+                      <h3 className="font-bold text-lg mb-3 text-black">
+                        Choose Shipping Address
+                      </h3>
                       <div className="space-y-3">
                         {addresses.map((addr, idx) => (
                           <div
                             key={idx}
-                            className={`p-4 rounded-lg border-2 transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md bg-white ${selectedAddressIndex === idx ? 'border-blue-600 bg-blue-50 shadow' : 'border-gray-200'}`}
+                            className={`p-4 rounded-lg border-2 transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md bg-white ${selectedAddressIndex === idx ? "border-blue-600 bg-blue-50 shadow" : "border-gray-200"}`}
                             onClick={() => handleSelectAddress(idx)}
                           >
                             <div>
                               <div className="font-semibold text-base flex items-center gap-2">
-                                <span className="w-5 h-5 text-blue-600">🏠</span>
-                                {addr.label || 'Address'}
+                                <span className="w-5 h-5 text-blue-600">
+                                  🏠
+                                </span>
+                                {addr.label || "Address"}
                               </div>
                               <div className="text-gray-700 text-sm mt-1">
-                                {addr.street}, {addr.city}, {addr.state}, {addr.zip}, {addr.country}
+                                {addr.street}, {addr.city}, {addr.state},{" "}
+                                {addr.zip}, {addr.country}
                               </div>
                             </div>
                             {selectedAddressIndex === idx && (
@@ -625,33 +666,98 @@ const ProductDetail = () => {
                           </div>
                         ))}
                       </div>
-                      <Button type="button" className="mt-5 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all" onClick={() => setShowAddressForm(true)}>
+                      <Button
+                        type="button"
+                        className="mt-5 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all"
+                        onClick={() => setShowAddressForm(true)}
+                      >
                         + Add New Address
                       </Button>
                     </div>
                   )}
                   {showAddressForm && (
-                    <form onSubmit={handleAddressFormSubmit} className="space-y-4 p-4 bg-gray-50 rounded-lg shadow-md border border-gray-200 animate-fade-in">
+                    <form
+                      onSubmit={handleAddressFormSubmit}
+                      className="space-y-4 p-4 bg-gray-50 rounded-lg shadow-md border border-gray-200 animate-fade-in"
+                    >
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-xl font-bold text-black">Add New Address</h3>
-                        <button type="button" onClick={() => setShowAddressForm(false)} className="text-gray-500 hover:text-black">✖️</button>
+                        <h3 className="text-xl font-bold text-black">
+                          Add New Address
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddressForm(false)}
+                          className="text-gray-500 hover:text-black"
+                        >
+                          ✖️
+                        </button>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Input name="label" placeholder="Label (e.g. Home, Work)" value={addressForm.label} onChange={handleAddressFormChange} />
-                        <Input name="street" placeholder="Street" value={addressForm.street} onChange={handleAddressFormChange} required />
-                        <Input name="city" placeholder="City" value={addressForm.city} onChange={handleAddressFormChange} required />
-                        <Input name="state" placeholder="State" value={addressForm.state} onChange={handleAddressFormChange} />
-                        <Input name="zip" placeholder="ZIP Code" value={addressForm.zip} onChange={handleAddressFormChange} />
-                        <Input name="country" placeholder="Country" value={addressForm.country} onChange={handleAddressFormChange} required />
+                        <Input
+                          name="label"
+                          placeholder="Label (e.g. Home, Work)"
+                          value={addressForm.label}
+                          onChange={handleAddressFormChange}
+                        />
+                        <Input
+                          name="street"
+                          placeholder="Street"
+                          value={addressForm.street}
+                          onChange={handleAddressFormChange}
+                          required
+                        />
+                        <Input
+                          name="city"
+                          placeholder="City"
+                          value={addressForm.city}
+                          onChange={handleAddressFormChange}
+                          required
+                        />
+                        <Input
+                          name="state"
+                          placeholder="State"
+                          value={addressForm.state}
+                          onChange={handleAddressFormChange}
+                        />
+                        <Input
+                          name="zip"
+                          placeholder="ZIP Code"
+                          value={addressForm.zip}
+                          onChange={handleAddressFormChange}
+                        />
+                        <Input
+                          name="country"
+                          placeholder="Country"
+                          value={addressForm.country}
+                          onChange={handleAddressFormChange}
+                          required
+                        />
                       </div>
                       <div className="flex gap-2 mt-4">
-                        <Button type="submit" disabled={addressLoading} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all">{addressLoading ? 'Saving...' : 'Save Address'}</Button>
-                        <Button type="button" variant="outline" onClick={() => setShowAddressForm(false)} className="border-gray-300">Cancel</Button>
+                        <Button
+                          type="submit"
+                          disabled={addressLoading}
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all"
+                        >
+                          {addressLoading ? "Saving..." : "Save Address"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setShowAddressForm(false)}
+                          className="border-gray-300"
+                        >
+                          Cancel
+                        </Button>
                       </div>
                     </form>
                   )}
                   {addresses.length === 0 && !showAddressForm && (
-                    <Button type="button" onClick={() => setShowAddressForm(true)} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all">
+                    <Button
+                      type="button"
+                      onClick={() => setShowAddressForm(true)}
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all"
+                    >
                       + Add Shipping Address
                     </Button>
                   )}
@@ -738,7 +844,9 @@ const ProductDetail = () => {
                       <p className="text-sm text-red-600 mt-2">{couponError}</p>
                     )}
                     {couponSuccess && (
-                      <p className="text-sm text-green-600 mt-2">✓ {couponSuccess}</p>
+                      <p className="text-sm text-green-600 mt-2">
+                        ✓ {couponSuccess}
+                      </p>
                     )}
                   </div>
                   {checkoutError && (
@@ -918,7 +1026,7 @@ const ProductDetail = () => {
                           }
                           try {
                             const res = await fetch(
-                              `${baseUrl}/api/reviews/${review._id}`,
+                              `${API_BASE_URL}${API_ENDPOINTS.REVIEW_DETAIL(review._id)}`,
                               {
                                 method: "PATCH",
                                 headers: {
@@ -940,7 +1048,7 @@ const ProductDetail = () => {
                             setEditingReviewId(null);
                             // Refresh reviews
                             const reviewsRes = await fetch(
-                              `${baseUrl}/api/reviews/${id}`
+                              `${API_BASE_URL}${API_ENDPOINTS.REVIEW_DETAIL(id)}`
                             );
                             if (reviewsRes.ok) {
                               const reviewsData = await reviewsRes.json();
@@ -1022,7 +1130,7 @@ const ProductDetail = () => {
                                   return;
                                 try {
                                   const res = await fetch(
-                                    `${baseUrl}/api/reviews/${review._id}`,
+                                    `${API_BASE_URL}${API_ENDPOINTS.REVIEW_DETAIL(review._id)}`,
                                     {
                                       method: "DELETE",
                                       headers: {
@@ -1038,7 +1146,7 @@ const ProductDetail = () => {
                                   toast({ title: "Review deleted!" });
                                   // Refresh reviews
                                   const reviewsRes = await fetch(
-                                    `${baseUrl}/api/reviews/${id}`
+                                    `${API_BASE_URL}${API_ENDPOINTS.REVIEW_DETAIL(id)}`
                                   );
                                   if (reviewsRes.ok) {
                                     const reviewsData = await reviewsRes.json();
@@ -1109,18 +1217,21 @@ const ProductDetail = () => {
                 setSubmittingReview(true);
 
                 try {
-                  const response = await fetch(`${baseUrl}/api/reviews`, {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                      productId: id,
-                      rating: reviewRating,
-                      review: reviewText.trim(),
-                    }),
-                  });
+                  const response = await fetch(
+                    `${API_BASE_URL}${API_ENDPOINTS.REVIEWS}`,
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({
+                        productId: id,
+                        rating: reviewRating,
+                        review: reviewText.trim(),
+                      }),
+                    }
+                  );
 
                   const data = await response.json();
 
@@ -1130,7 +1241,7 @@ const ProductDetail = () => {
 
                   // Refresh product data to get updated rating
                   const productRes = await fetch(
-                    `${baseUrl}/api/products/${id}`
+                    `${API_BASE_URL}${API_ENDPOINTS.PRODUCT_DETAIL(id)}`
                   );
                   if (productRes.ok) {
                     const updatedProduct = await productRes.json();
@@ -1139,7 +1250,7 @@ const ProductDetail = () => {
 
                   // Refresh reviews
                   const reviewsRes = await fetch(
-                    `${baseUrl}/api/reviews/${id}`
+                    `${API_BASE_URL}${API_ENDPOINTS.REVIEW_DETAIL(id)}`
                   );
                   if (reviewsRes.ok) {
                     const reviewsData = await reviewsRes.json();

@@ -45,15 +45,15 @@ exports.sendContactEmail = async (req, res, next) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "laptoptest7788@gmail.com", //process.env.EMAIL_USER      ,
-        pass: "uqfiabjkiqudrgdw", //process.env.EMAIL_PASS
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
     // Email content
     const mailOptions = {
-      from: "laptoptest7788@gmail.com", //process.env.EMAIL_USER
-      to: "laptoptest7788@gmail.com", //process.env.ADMIN_EMAIL || process.env.EMAIL_USER, // Send to admin email or fallback to sender
+      from: process.env.EMAIL_USER,
+      to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER, // Send to admin email or fallback to sender
       subject: `Contact Form: ${subject}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

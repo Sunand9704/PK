@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
 
 interface Product {
   _id: string;
@@ -57,7 +58,7 @@ export const TopProducts: React.FC = () => {
       try {
         const token = localStorage.getItem("admin_token");
         const response = await fetch(
-          "http://localhost:8000/api/products?sort=soldCount_desc&limit=5",
+          `${API_BASE_URL}${API_ENDPOINTS.PRODUCTS}?sort=soldCount_desc&limit=5`,
           {
             headers: {
               "Content-Type": "application/json",

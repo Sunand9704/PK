@@ -31,7 +31,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const BASE_URL = "http://localhost:8000";
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -141,7 +141,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
       }
 
-      const res = await fetch(`${BASE_URL}/api/admin/login`, {
+      const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_LOGIN}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -236,11 +236,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
       }
 
-      const res = await fetch(`${BASE_URL}/api/admin/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
+      const res = await fetch(
+        `${API_BASE_URL}${API_ENDPOINTS.ADMIN_REGISTER}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password }),
+        }
+      );
 
       const data = await res.json();
 

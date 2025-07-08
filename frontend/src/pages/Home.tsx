@@ -5,6 +5,7 @@ import ProductCard from "@/components/shared/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
 
 // Fallback static categories in case API is not available
 const fallbackCategories = [
@@ -30,8 +31,6 @@ const fallbackCategories = [
     description: "Complete your look with our accessories",
   },
 ];
-const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -43,11 +42,15 @@ const Home = () => {
       setLoading(true);
       try {
         const [productsRes, categoriesRes, reviewsRes] = await Promise.all([
-          fetch(`${baseUrl}/api/products`).then((res) => res.json()),
-          fetch(`${baseUrl}/api/categories/with-top-products`).then((res) =>
+          fetch(`${API_BASE_URL}${API_ENDPOINTS.PRODUCTS}`).then((res) =>
             res.json()
           ),
-          fetch(`${baseUrl}/api/reviews/top`).then((res) => res.json()),
+          fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.CATEGORIES_WITH_TOP_PRODUCTS}`
+          ).then((res) => res.json()),
+          fetch(`${API_BASE_URL}${API_ENDPOINTS.TOP_REVIEWS}`).then((res) =>
+            res.json()
+          ),
         ]);
 
         setProducts(productsRes.products || []);

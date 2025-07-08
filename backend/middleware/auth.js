@@ -14,8 +14,7 @@ module.exports = async (req, res, next) => {
     return res.status(401).json({ msg: "No token, authorization denied" });
   }
   try {
-    const decoded = jwt.verify(token, "secretToken");
-   
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Try to find user in both collections
     let user = await User.findById(decoded.id).select("-password");
@@ -25,10 +24,10 @@ module.exports = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({ msg: "User not found" });
     }
-    console.log("user",user);
-    
+    console.log("user", user);
+
     req.user = user;
-   console.log("req.user",req.user);
+    console.log("req.user", req.user);
 
     next();
   } catch (error) {

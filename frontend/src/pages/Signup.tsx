@@ -8,6 +8,7 @@ import { Eye, EyeOff, Mail, Lock, User, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -23,7 +24,6 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-  const baseUrl = "http://localhost:8000";
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -57,7 +57,7 @@ const SignUp = () => {
     }
     setLoading(true);
     try {
-      const res = await fetch(`${baseUrl}/api/auth/register`, {
+      const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.REGISTER}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ firstName, lastName, email, phone, password }),

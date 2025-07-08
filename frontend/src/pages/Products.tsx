@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
 
 const Products = () => {
   const location = useLocation();
@@ -24,7 +25,6 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
   // Fallback static categories in case API is not available
   const fallbackCategories = [
@@ -62,7 +62,9 @@ const Products = () => {
       setError(null);
       try {
         // Fetch all products without pagination by setting a high limit
-        const response = await fetch(`${baseUrl}/api/products?limit=1000`);
+        const response = await fetch(
+          `${API_BASE_URL}${API_ENDPOINTS.PRODUCTS}?limit=1000`
+        );
         if (!response.ok) {
           throw new Error("Failed to fetch products");
         }
@@ -83,7 +85,9 @@ const Products = () => {
     async function fetchProduct() {
       if (id) {
         try {
-          const res = await fetch(`${baseUrl}/api/products/${id}`);
+          const res = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.PRODUCT_DETAIL(id)}`
+          );
           // Handle individual product fetch if needed
         } catch (error) {
           console.error("Error fetching individual product:", error);
@@ -91,7 +95,7 @@ const Products = () => {
       }
     }
     fetchProduct();
-  }, [id, baseUrl]);
+  }, [id]);
 
   const cats = fallbackCategories;
   const filteredProducts =

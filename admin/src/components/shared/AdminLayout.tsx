@@ -1,9 +1,8 @@
-
-import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
-import { AdminSidebar } from './AdminSidebar';
-import { AdminNavbar } from './AdminNavbar';
-import { motion } from 'framer-motion';
+import React, { useState } from "react";
+import { Outlet } from "react-router-dom";
+import { AdminSidebar } from "./AdminSidebar";
+import { AdminNavbar } from "./AdminNavbar";
+import { motion } from "framer-motion";
 
 export const AdminLayout: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -11,11 +10,13 @@ export const AdminLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="flex">
-        <AdminSidebar 
-          collapsed={sidebarCollapsed} 
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+        <AdminSidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
-        <div className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
+        <div
+          className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64"}`}
+        >
           <AdminNavbar />
           <motion.main
             initial={{ opacity: 0, y: 20 }}
