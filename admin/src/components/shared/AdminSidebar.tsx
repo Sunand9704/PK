@@ -1,7 +1,6 @@
-
-import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import React from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   LayoutDashboard,
   Package,
@@ -10,10 +9,12 @@ import {
   Tag,
   Menu,
   LogOut,
-  TrendingUp
-} from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
+  TrendingUp,
+  Database,
+  Repeat,
+} from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
 
 interface AdminSidebarProps {
   collapsed: boolean;
@@ -21,14 +22,19 @@ interface AdminSidebarProps {
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Products', href: '/products', icon: Package },
-  { name: 'Orders', href: '/orders', icon: ShoppingCart },
-  { name: 'Users', href: '/users', icon: Users },
-  { name: 'Coupons', href: '/coupons', icon: Tag },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Products", href: "/products", icon: Package },
+  { name: "Orders", href: "/orders", icon: ShoppingCart },
+  { name: "Users", href: "/users", icon: Users },
+  { name: "Coupons", href: "/coupons", icon: Tag },
+  { name: "Return Requests", href: "/returns", icon: Repeat },
+  { name: "Data Entry", href: "/data-entry", icon: Database },
 ];
 
-export const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onToggle }) => {
+export const AdminSidebar: React.FC<AdminSidebarProps> = ({
+  collapsed,
+  onToggle,
+}) => {
   const location = useLocation();
   const { logout, user } = useAuth();
 
@@ -36,7 +42,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onToggle 
     <motion.div
       initial={false}
       animate={{ width: collapsed ? 64 : 256 }}
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
       className="fixed left-0 top-0 h-full bg-white shadow-xl border-r border-gray-200 z-40"
     >
       <div className="flex flex-col h-full">
@@ -72,8 +78,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onToggle 
                 to={item.href}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 ${
                   isActive
-                    ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -95,7 +101,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onToggle 
             onClick={logout}
             variant="ghost"
             className={`w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700 ${
-              collapsed ? 'px-2' : ''
+              collapsed ? "px-2" : ""
             }`}
           >
             <LogOut className="w-5 h-5" />

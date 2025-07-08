@@ -3,15 +3,6 @@ const Product = require("../models/Product");
 const User = require("../models/User");
 const nodemailer = require("nodemailer");
 
-// Email transporter configuration
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
 // Helper function to send order emails
 const sendOrderEmail = async (
   userEmail,
@@ -21,6 +12,13 @@ const sendOrderEmail = async (
   message
 ) => {
   try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
     const mailOptions = {
       from: "laptoptest7788@gmail.com",
       to: userEmail,

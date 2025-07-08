@@ -231,13 +231,18 @@ const OrderSummary = ({
   };
 
   const handleRazorpay = async () => {
+    console.log("camed to razorpay function");
+    
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     document.body.appendChild(script);
     script.onload = async () => {
+      console.log("came to razorpay function key send section");
       const options = {
-        key: import.meta.env.RAZOR_PAY_KEY, // Razorpay test key
+        
+        
+        key: import.meta.env.VITE_RAZOR_PAY_KEY, // Razorpay test key
         amount: Math.round(finalTotal * 100),
         currency: "INR",
         name: "PK Trends",

@@ -15,6 +15,8 @@ import { Orders } from "@/pages/orders/Orders";
 import { Users } from "@/pages/users/Users";
 import { Coupons } from "@/pages/coupons/Coupons";
 import { Notifications } from "@/pages/Notifications";
+import { DataEntry } from "@/pages/dataEntry/DataEntry";
+import AdminReturns from "@/pages/returns/AdminReturns";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/products/index";
 
@@ -47,6 +49,8 @@ const App = () => (
                 <Route path="users" element={<Users />} />
                 <Route path="coupons" element={<Coupons />} />
                 <Route path="notifications" element={<Notifications />} />
+                <Route path="data-entry" element={<DataEntry />} />
+                <Route path="returns" element={<AdminReturns />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

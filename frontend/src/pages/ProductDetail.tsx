@@ -283,7 +283,7 @@ const ProductDetail = () => {
     document.body.appendChild(script);
     script.onload = async () => {
       const options = {
-        key: import.meta.env.RAZOR_PAY_KEY, // Razorpay test key
+        key: import.meta.env.VITE_RAZOR_PAY_KEY, // Razorpay test key
         amount: Math.round(product.price * quantity * 100),
         currency: "INR",
         name: "PK Trends",

@@ -52,4 +52,7 @@ export const API_ENDPOINTS = {
 
   // Upload
   UPLOAD: "/api/upload",
+
+  // Hero Carousel
+  HERO_CAROUSEL: "/api/hero-carousel",
 } as const;
