@@ -72,7 +72,7 @@ const SignUp = () => {
         setSuccess("Account created successfully! Redirecting...");
         setTimeout(() => navigate("/"), 1500);
       } else {
-        setError(data.errors?.[0]?.msg || "Registration failed");
+        setError(data.message || data.errors?.[0]?.msg || "Registration failed");
       }
     } catch (err) {
       setError("Network error");

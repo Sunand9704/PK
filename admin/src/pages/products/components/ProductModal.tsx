@@ -52,6 +52,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     features: "",
   });
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
   const getToken = () => {
     const token = localStorage.getItem("admin_token");
     return token;
@@ -169,9 +171,51 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     return data.url;
   };
 
+  // Validation function
+  const validate = () => {
+    const newErrors: { [key: string]: string } = {};
+    if (!formData.name || formData.name.trim().length < 2) {
+      newErrors.name = "Product name is required (min 2 chars)";
+    }
+    if (!formData.category) {
+      newErrors.category = "Category is required";
+    }
+    if (!formData.price || isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
+      newErrors.price = "Valid price is required";
+    }
+    if (!formData.originalPrice || isNaN(Number(formData.originalPrice)) || Number(formData.originalPrice) < 0) {
+      newErrors.originalPrice = "Original price is required and must be a positive number";
+    }
+    if (!formData.description || formData.description.length > 500) {
+      newErrors.description = !formData.description ? "Description is required" : "Description too long (max 500 chars)";
+    }
+    if (!rawInputs.sizes || !rawInputs.sizes.split(",").every(s => s.trim().length > 0)) {
+      newErrors.sizes = "Sizes are required as comma separated values";
+    }
+    if (!rawInputs.colors || !rawInputs.colors.split(",").every(c => c.trim().length > 0)) {
+      newErrors.colors = "Colors are required as comma separated values";
+    }
+    if (!rawInputs.features || !rawInputs.features.split(",").every(f => f.trim().length > 0)) {
+      newErrors.features = "Features are required as comma separated values";
+    }
+    if (imagePreviews.length === 0 && (!formData.images || formData.images.length === 0)) {
+      newErrors.images = "At least one product image is required";
+    }
+    if (localImages.some(img => img.size > 10 * 1024 * 1024)) {
+      newErrors.images = "Each image must be less than 10MB";
+    }
+    return newErrors;
+  };
+
   // On submit, upload images, then submit product
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const validationErrors = validate();
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     // Ensure arrays are up to date from rawInputs
     const sizes = rawInputs.sizes
@@ -286,6 +330,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 placeholder="Enter product name"
                 required
               />
+              {errors.name && <div className="text-red-500 text-xs">{errors.name}</div>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
@@ -302,6 +347,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   <SelectItem value="accessories">Accessories</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.category && <div className="text-red-500 text-xs">{errors.category}</div>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="price">Price (₹)</Label>
@@ -314,6 +360,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 placeholder="0.00"
                 required
               />
+              {errors.price && <div className="text-red-500 text-xs">{errors.price}</div>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="originalPrice">Original Price (₹)</Label>
@@ -327,6 +374,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 }
                 placeholder="0.00"
               />
+              {errors.originalPrice && <div className="text-red-500 text-xs">{errors.originalPrice}</div>}
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -348,7 +396,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   }))
                 }
                 placeholder="S, M, L, XL"
+                required
               />
+              {errors.sizes && <div className="text-red-500 text-xs">{errors.sizes}</div>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="colors">Colors (comma separated)</Label>
@@ -368,7 +418,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   }))
                 }
                 placeholder="Red, Blue, Black"
+                required
               />
+              {errors.colors && <div className="text-red-500 text-xs">{errors.colors}</div>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="features">Features (comma separated)</Label>
@@ -391,7 +443,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   }))
                 }
                 placeholder="100% Cotton, Machine Washable"
+                required
               />
+              {errors.features && <div className="text-red-500 text-xs">{errors.features}</div>}
             </div>
             <div className="space-y-2 flex items-center mt-6">
               <Label htmlFor="inStock" className="mr-2">
@@ -434,6 +488,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 onChange={(e) => handleImageFiles(e.target.files)}
               />
             </div>
+            {errors.images && <div className="text-red-500 text-xs">{errors.images}</div>}
             {imagePreviews.length > 0 && (
               <div className="flex flex-wrap gap-4 mt-4 justify-center">
                 {imagePreviews.map((img, idx) => (
@@ -467,6 +522,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               onChange={(e) => handleInputChange("description", e.target.value)}
               placeholder="Product description..."
               rows={3}
+              required
             />
           </div>
           <div className="flex justify-end space-x-3 pt-4">

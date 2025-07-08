@@ -93,7 +93,7 @@ export const DashboardStats: React.FC = () => {
         const data = await response.json();
         setStatsData(data);
       } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
+        // No console.error statements
       } finally {
         setLoading(false);
       }

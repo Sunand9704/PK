@@ -32,8 +32,6 @@ const validateEnv = () => {
       "\nThese variables are optional but recommended for better security and configuration."
     );
   }
-
-  console.log("✅ All required environment variables are set");
 };
 
 module.exports = validateEnv;
