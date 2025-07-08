@@ -37,6 +37,12 @@ export const API_ENDPOINTS = {
 
   // Notifications
   NOTIFICATIONS: "/api/notifications",
+
+  // Hero Carousel
+  ADMIN_HERO_CAROUSEL: "/api/admin/hero-carousel",
+  HERO_CAROUSEL_DETAIL: (id: string) => `/api/admin/hero-carousel/${id}`,
+  HERO_CAROUSEL_TOGGLE: (id: string) => `/api/admin/hero-carousel/${id}/toggle`,
+  HERO_CAROUSEL_REORDER: "/api/admin/hero-carousel/reorder",
 };
 
 // Helper function to get auth headers

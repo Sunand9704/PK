@@ -167,7 +167,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                       {product.category}
                     </Badge>
                   </div>
-                  <Link to={`/product/${product._id}`}>
+                  <Link to={`/products/${product._id}`}>
                     <h3 className="font-semibold text-lg mb-2 hover:text-blue-600 transition-colors">
                       {product.name}
                     </h3>

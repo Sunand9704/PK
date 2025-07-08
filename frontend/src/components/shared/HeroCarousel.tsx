@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getActiveSlides, HeroCarouselSlide } from "@/lib/heroCarouselApi";
 
 // Add custom CSS for object-inherit
 const customStyles = `
@@ -18,53 +19,41 @@ if (typeof document !== "undefined") {
   document.head.appendChild(styleElement);
 }
 
-const slides = [
-  {
-    id: 1,
-    title: "New Collection",
-    subtitle: "Premium Men's Fashion",
-    description:
-      "Discover our latest collection of premium shirts, pants, and accessories",
-    customContent: "Manalli Appedhi Yavadu Ra",
-    image:
-      "https://res.cloudinary.com/dnbqgzh4t/image/upload/v1750787984/1401349_k7aefm.jpg",
-    cta: "Shop Now",
-    link: "/shop",
-  },
-  {
-    id: 2,
-    title: "Classic Shirts",
-    subtitle: "Timeless Style",
-    description:
-      "Crafted from the finest materials for unparalleled comfort and style",
-    image:
-      "https://images.unsplash.com/photo-1581803118522-7b72a50f7e9f?w=1920&h=800&fit=crop",
-    cta: "View Shirts",
-    link: "/shop/shirts",
-  },
-  {
-    id: 3,
-    title: "Modern Fits",
-    subtitle: "Contemporary Design",
-    description:
-      "Perfect fits for the modern gentleman. Elevate your everyday style",
-    image:
-      "https://www.fashioncronical.com/wp-content/uploads/2025/01/stylish-high-waisted-pants-for-men-in-2025.jpg",
-    cta: "Shop Pants",
-    link: "/shop/pants",
-  },
-];
-
 const HeroCarousel = () => {
+  const [slides, setSlides] = useState<HeroCarouselSlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Fetch slides from API
   useEffect(() => {
+    const fetchSlides = async () => {
+      try {
+        setLoading(true);
+        const data = await getActiveSlides();
+        setSlides(data);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching hero carousel slides:", err);
+        setError("Failed to load carousel slides");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSlides();
+  }, []);
+
+  // Auto-advance slides
+  useEffect(() => {
+    if (slides.length === 0) return;
+
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -74,11 +63,38 @@ const HeroCarousel = () => {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="relative h-[70vh] overflow-hidden bg-gray-100 flex items-center justify-center">
+        <div className="text-gray-500">Loading carousel...</div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="relative h-[70vh] overflow-hidden bg-gray-100 flex items-center justify-center">
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
+  }
+
+  // Show empty state
+  if (slides.length === 0) {
+    return (
+      <div className="relative h-[70vh] overflow-hidden bg-gray-100 flex items-center justify-center">
+        <div className="text-gray-500">No slides available</div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative h-[70vh] overflow-hidden">
       {slides.map((slide, index) => (
         <div
-          key={slide.id}
+          key={slide._id}
           className={`absolute inset-0 transition-transform duration-3000 ease-in-out ${
             index === currentSlide
               ? "translate-x-0"

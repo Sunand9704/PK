@@ -47,15 +47,14 @@ import { Label } from "@/components/ui/label";
 const menuItems = [
   {
     category: "Account",
-    items: [
-      { title: "User Information", icon: User, id: "user-info" },
-    ],
+    items: [{ title: "User Information", icon: User, id: "user-info" }],
   },
   {
     category: "Orders & Shopping",
     items: [
       { title: "My Orders", icon: Box, id: "orders" },
       { title: "Wishlist", icon: Star, id: "wishlist" },
+      { title: "Return  Requests", icon: Archive, id: "returns" },
     ],
   },
   {
@@ -175,6 +174,15 @@ const Orders: React.FC = () => {
   const [actionLoading, setActionLoading] = React.useState(false);
   const [actionError, setActionError] = React.useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = React.useState<string | null>(null);
+  const [showReturnModal, setShowReturnModal] = React.useState(false);
+  const [selectedOrderProductId, setSelectedOrderProductId] = React.useState<
+    string | null
+  >(null);
+  const [returnType, setReturnType] = useState("return");
+  const [returnReason, setReturnReason] = useState("");
+  const [returnLoading, setReturnLoading] = useState(false);
+  const [returnError, setReturnError] = useState("");
+  const [returnSuccess, setReturnSuccess] = useState("");
 
   // Refetch orders function
   const fetchOrders = async () => {
@@ -413,8 +421,12 @@ const Orders: React.FC = () => {
               <div className="text-left md:text-right">
                 {order.discount > 0 ? (
                   <>
-                    <div className="line-through text-gray-400 text-sm">₹{order.price}</div>
-                    <div className="text-green-700 text-sm">-₹{order.discount} discount</div>
+                    <div className="line-through text-gray-400 text-sm">
+                      ₹{order.price}
+                    </div>
+                    <div className="text-green-700 text-sm">
+                      -₹{order.discount} discount
+                    </div>
                     <div className="font-bold text-lg">₹{order.finalPrice}</div>
                   </>
                 ) : (
@@ -756,10 +768,125 @@ const Orders: React.FC = () => {
                   </div>
                 )}
               </div>
+              {selectedOrder && selectedOrder.status === "delivered" && (
+                <Button
+                  className="w-full bg-blue-600 text-white mt-4"
+                  onClick={() => {
+                    // 2-day return restriction logic
+                    const deliveredAt = selectedOrder.updatedAt ? new Date(selectedOrder.updatedAt) : null;
+                    const now = new Date();
+                    if (
+                      deliveredAt &&
+                      Math.floor((now.getTime() - deliveredAt.getTime()) / (1000 * 60 * 60 * 24)) > 2
+                    ) {
+                      toast({
+                        title: "Return period expired",
+                        description:
+                          "You can't return this product after 2 days as we mentioned in the delivered mail.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    setSelectedOrderProductId(
+                      selectedOrder.productId?._id || selectedOrder.productId
+                    );
+                    setShowReturnModal(true);
+                  }}
+                >
+                  Return
+                </Button>
+              )}
             </div>
           )}
         </DialogContent>
       </Dialog>
+      {showReturnModal && (
+        <Dialog open={showReturnModal} onOpenChange={setShowReturnModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Return </DialogTitle>
+              <DialogDescription>
+                Submit a request for return of your product.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Type</label>
+                <select
+                  className="w-full border rounded px-3 py-2"
+                  value={returnType}
+                  onChange={(e) => setReturnType(e.target.value)}
+                >
+                  <option value="return">Return</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Reason</label>
+                <textarea
+                  className="w-full border rounded px-3 py-2"
+                  placeholder="Reason for return"
+                  value={returnReason}
+                  onChange={(e) => setReturnReason(e.target.value)}
+                  rows={3}
+                />
+              </div>
+              {returnError && (
+                <div className="text-red-600 text-sm">{returnError}</div>
+              )}
+              {returnSuccess && (
+                <div className="text-green-600 text-sm">{returnSuccess}</div>
+              )}
+              <DialogFooter>
+                <Button
+                  onClick={async () => {
+                    setReturnLoading(true);
+                    setReturnError("");
+                    setReturnSuccess("");
+                    try {
+                      const res = await fetch(
+                        `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/returns`,
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({
+                            order: selectedOrder?._id,
+                            product: selectedOrderProductId,
+                            type: returnType,
+                            reason: returnReason,
+                          }),
+                        }
+                      );
+                      const data = await res.json();
+                      if (!res.ok)
+                        throw new Error(data.msg || "Failed to submit request");
+                      setReturnSuccess("Request submitted!");
+                      setShowReturnModal(false);
+                      setReturnType("return");
+                      setReturnReason("");
+                    } catch (err: any) {
+                      setReturnError(err.message);
+                    } finally {
+                      setReturnLoading(false);
+                    }
+                  }}
+                  disabled={returnLoading || !returnReason}
+                >
+                  {returnLoading ? "Submitting..." : "Submit"}
+                </Button>
+                <Button
+                  onClick={() => setShowReturnModal(false)}
+                  variant="outline"
+                >
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
@@ -801,7 +928,9 @@ const CouponsRewards: React.FC<{ token: string }> = ({ token }) => {
   };
 
   if (!token) {
-    return <div className="p-4 md:p-8">Please sign in to view your coupons.</div>;
+    return (
+      <div className="p-4 md:p-8">Please sign in to view your coupons.</div>
+    );
   }
   if (loading) {
     return <div className="p-4 md:p-8">Loading coupons...</div>;
@@ -823,14 +952,22 @@ const CouponsRewards: React.FC<{ token: string }> = ({ token }) => {
       <h2 className="text-2xl font-bold mb-4">Coupons & Rewards</h2>
       <ul className="space-y-4">
         {coupons.map((coupon) => (
-          <li key={coupon._id} className="bg-white p-4 rounded shadow flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <li
+            key={coupon._id}
+            className="bg-white p-4 rounded shadow flex flex-col sm:flex-row sm:items-center sm:justify-between"
+          >
             <div>
               <div className="font-semibold text-lg">{coupon.code}</div>
               <div className="text-gray-500 text-sm">
                 {coupon.discountType === "percentage"
                   ? `${coupon.discountValue}% off`
-                  : `₹${coupon.discountValue} off`} {coupon.minOrderValue ? `on orders above ₹${coupon.minOrderValue}` : ""}
-                {coupon.expiryDate ? ` | Expires: ${new Date(coupon.expiryDate).toLocaleDateString()}` : ""}
+                  : `₹${coupon.discountValue} off`}{" "}
+                {coupon.minOrderValue
+                  ? `on orders above ₹${coupon.minOrderValue}`
+                  : ""}
+                {coupon.expiryDate
+                  ? ` | Expires: ${new Date(coupon.expiryDate).toLocaleDateString()}`
+                  : ""}
               </div>
             </div>
             <Button
@@ -840,6 +977,86 @@ const CouponsRewards: React.FC<{ token: string }> = ({ token }) => {
             >
               Copy
             </Button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+const Returns: React.FC = () => {
+  const { token } = useAuth();
+  const [requests, setRequests] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  React.useEffect(() => {
+    const fetchRequests = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/returns`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setRequests(data.requests || []);
+        } else {
+          toast({ title: "Failed to fetch requests", variant: "destructive" });
+        }
+      } catch {
+        toast({ title: "Error fetching requests", variant: "destructive" });
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (token) fetchRequests();
+  }, [token]);
+  if (!token)
+    return (
+      <div className="p-4 md:p-8">Please sign in to view your requests.</div>
+    );
+  if (loading) return <div className="p-4 md:p-8">Loading requests...</div>;
+  if (requests.length === 0)
+    return (
+      <div className="p-4 md:p-8">No return or  requests found.</div>
+    );
+  return (
+    <div className="p-4 md:p-8">
+      <h2 className="text-2xl font-bold mb-4">Return  Requests</h2>
+      <ul className="space-y-4">
+        {requests.map((req) => (
+          <li key={req._id} className="bg-white p-4 rounded shadow">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-2 gap-2">
+              <div>
+                <div className="font-semibold">
+                  Order #{req.order?.orderId || req.order}
+                </div>
+                <div className="text-gray-500 text-sm">
+                  Product: {req.product?.name || req.product}
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="inline-block px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">
+                  {req.status.charAt(0).toUpperCase() + req.status.slice(1)}
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+              <div>
+                Type:{" "}
+                <span className="font-medium">
+                  {req.type.charAt(0).toUpperCase() + req.type.slice(1)}
+                </span>
+              </div>
+              <div>Date: {new Date(req.createdAt).toLocaleDateString()}</div>
+            </div>
+            {req.status === 'approved' && (
+    <div className="mt-2 text-blue-600 font-medium">Wait for admin delivered status</div>
+  )}
+            <div className="mt-2 text-gray-700 text-sm">
+              Reason: {req.reason}
+            </div>
           </li>
         ))}
       </ul>
@@ -867,12 +1084,12 @@ export default function Profile() {
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [addressEditIndex, setAddressEditIndex] = useState<number | null>(null);
   const [addressForm, setAddressForm] = useState({
-    label: '',
-    street: '',
-    city: '',
-    state: '',
-    zip: '',
-    country: '',
+    label: "",
+    street: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "",
   });
   const [addressLoading, setAddressLoading] = useState(false);
   const [userReviews, setUserReviews] = useState<any[]>([]);
@@ -895,6 +1112,10 @@ export default function Profile() {
   const otpInputRef = React.useRef<HTMLInputElement>(null);
   const pwdInputRef = React.useRef<HTMLInputElement>(null);
   const emailInputRef = React.useRef<HTMLInputElement>(null);
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [selectedOrderProductId, setSelectedOrderProductId] = useState<
+    string | null
+  >(null);
 
   const userEmail = userInfo?.email || "";
   const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -938,20 +1159,27 @@ export default function Profile() {
     if (activeSection === "reviews" && token) {
       setLoadingReviews(true);
       setReviewsError(null);
-      fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reviews/user`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reviews/user`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
         .then((res) => {
           if (!res.ok) throw new Error("Failed to fetch reviews");
           return res.json();
         })
         .then((data) => setUserReviews(data.reviews || []))
-        .catch((err) => setReviewsError(err.message || "Error fetching reviews"))
+        .catch((err) =>
+          setReviewsError(err.message || "Error fetching reviews")
+        )
         .finally(() => setLoadingReviews(false));
     }
   }, [activeSection, token]);
 
-  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleEditChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
   };
 
@@ -963,17 +1191,23 @@ export default function Profile() {
     formData.append("image", file);
     formData.append("folder", "avatars");
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/upload`, {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
       if (!res.ok) throw new Error("Failed to upload image");
       const data = await res.json();
       setEditForm((prev) => ({ ...prev, avatar: data.url }));
       setAvatarPreview(data.url);
       toast({ title: "Profile picture uploaded" });
     } catch (err: any) {
-      toast({ title: err.message || "Error uploading image", variant: "destructive" });
+      toast({
+        title: err.message || "Error uploading image",
+        variant: "destructive",
+      });
     } finally {
       setAvatarUploading(false);
     }
@@ -983,19 +1217,22 @@ export default function Profile() {
     e.preventDefault();
     setEditLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          phone: editForm.phone,
-          dateOfBirth: editForm.dateOfBirth,
-          gender: editForm.gender,
-          avatar: editForm.avatar,
-        }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/profile`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            phone: editForm.phone,
+            dateOfBirth: editForm.dateOfBirth,
+            gender: editForm.gender,
+            avatar: editForm.avatar,
+          }),
+        }
+      );
       if (!res.ok) {
         throw new Error("Failed to update profile");
       }
@@ -1004,7 +1241,10 @@ export default function Profile() {
       setEditDialogOpen(false);
       toast({ title: "Profile updated successfully" });
     } catch (err: any) {
-      toast({ title: err.message || "Error updating profile", variant: "destructive" });
+      toast({
+        title: err.message || "Error updating profile",
+        variant: "destructive",
+      });
     } finally {
       setEditLoading(false);
     }
@@ -1015,19 +1255,26 @@ export default function Profile() {
     setAddressEditIndex(index);
     const addr = userInfo?.addressBook?.[index];
     setAddressForm({
-      label: addr?.label || '',
-      street: addr?.street || '',
-      city: addr?.city || '',
-      state: addr?.state || '',
-      zip: addr?.zip || '',
-      country: addr?.country || '',
+      label: addr?.label || "",
+      street: addr?.street || "",
+      city: addr?.city || "",
+      state: addr?.state || "",
+      zip: addr?.zip || "",
+      country: addr?.country || "",
     });
     setAddressDialogOpen(true);
   };
   // Address dialog open for add
   const openAddAddressDialog = () => {
     setAddressEditIndex(null);
-    setAddressForm({ label: '', street: '', city: '', state: '', zip: '', country: '' });
+    setAddressForm({
+      label: "",
+      street: "",
+      city: "",
+      state: "",
+      zip: "",
+      country: "",
+    });
     setAddressDialogOpen(true);
   };
   // Address form change
@@ -1042,32 +1289,43 @@ export default function Profile() {
       let res;
       if (addressEditIndex !== null) {
         // Edit
-        res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/address/${addressEditIndex}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(addressForm),
-        });
+        res = await fetch(
+          `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/address/${addressEditIndex}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(addressForm),
+          }
+        );
       } else {
         // Add
-        res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/address`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(addressForm),
-        });
+        res = await fetch(
+          `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/address`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(addressForm),
+          }
+        );
       }
       if (!res.ok) throw new Error("Failed to save address");
       const data = await res.json();
       setUserInfo((prev: any) => ({ ...prev, addressBook: data.addressBook }));
       setAddressDialogOpen(false);
-      toast({ title: addressEditIndex !== null ? "Address updated" : "Address added" });
+      toast({
+        title: addressEditIndex !== null ? "Address updated" : "Address added",
+      });
     } catch (err: any) {
-      toast({ title: err.message || "Error saving address", variant: "destructive" });
+      toast({
+        title: err.message || "Error saving address",
+        variant: "destructive",
+      });
     } finally {
       setAddressLoading(false);
     }
@@ -1075,21 +1333,28 @@ export default function Profile() {
 
   // Address delete
   const handleDeleteAddress = async (index: number) => {
-    if (!window.confirm("Are you sure you want to delete this address?")) return;
+    if (!window.confirm("Are you sure you want to delete this address?"))
+      return;
     setAddressLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/address/${index}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/address/${index}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       if (!res.ok) throw new Error("Failed to delete address");
       const data = await res.json();
       setUserInfo((prev: any) => ({ ...prev, addressBook: data.addressBook }));
       toast({ title: "Address deleted" });
     } catch (err: any) {
-      toast({ title: err.message || "Error deleting address", variant: "destructive" });
+      toast({
+        title: err.message || "Error deleting address",
+        variant: "destructive",
+      });
     } finally {
       setAddressLoading(false);
     }
@@ -1098,9 +1363,12 @@ export default function Profile() {
   // Autofocus logic
   useEffect(() => {
     if (changePwdOpen) {
-      if (changePwdStep === 1 && emailInputRef.current) emailInputRef.current.focus();
-      if (changePwdStep === 2 && otpInputRef.current) otpInputRef.current.focus();
-      if (changePwdStep === 3 && pwdInputRef.current) pwdInputRef.current.focus();
+      if (changePwdStep === 1 && emailInputRef.current)
+        emailInputRef.current.focus();
+      if (changePwdStep === 2 && otpInputRef.current)
+        otpInputRef.current.focus();
+      if (changePwdStep === 3 && pwdInputRef.current)
+        pwdInputRef.current.focus();
     }
   }, [changePwdOpen, changePwdStep]);
 
@@ -1127,12 +1395,14 @@ export default function Profile() {
   }, [otpCooldown]);
 
   const handleSendOtp = async () => {
-    setPwdError(""); setPwdSuccess(""); setPwdLoading(true);
+    setPwdError("");
+    setPwdSuccess("");
+    setPwdLoading(true);
     try {
       const res = await fetch(`${baseUrl}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: userEmail })
+        body: JSON.stringify({ email: userEmail }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -1160,12 +1430,14 @@ export default function Profile() {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPwdError(""); setPwdSuccess(""); setPwdLoading(true);
+    setPwdError("");
+    setPwdSuccess("");
+    setPwdLoading(true);
     try {
       const res = await fetch(`${baseUrl}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: userEmail, otp })
+        body: JSON.stringify({ email: userEmail, otp }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -1183,7 +1455,8 @@ export default function Profile() {
 
   const handleResetPwd = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPwdError(""); setPwdSuccess("");
+    setPwdError("");
+    setPwdSuccess("");
     if (newPwd !== confirmPwd) {
       setPwdError("Passwords do not match");
       return;
@@ -1193,7 +1466,7 @@ export default function Profile() {
       const res = await fetch(`${baseUrl}/api/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: userEmail, otp, password: newPwd })
+        body: JSON.stringify({ email: userEmail, otp, password: newPwd }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -1225,14 +1498,20 @@ export default function Profile() {
               <>
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16">
-                    <AvatarImage src={userInfo.avatar || "/placeholder.svg"} alt="Profile" />
+                    <AvatarImage
+                      src={userInfo.avatar || "/placeholder.svg"}
+                      alt="Profile"
+                    />
                     <AvatarFallback className="bg-gray-900 text-white">
-                      {(userInfo.firstName?.[0] || '') + (userInfo.lastName?.[0] || '') || 'U'}
+                      {(userInfo.firstName?.[0] || "") +
+                        (userInfo.lastName?.[0] || "") || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="font-semibold text-lg">{`${userInfo.firstName || ''} ${userInfo.lastName || ''}`}</div>
-                    <div className="text-gray-500 text-sm">{userInfo.email}</div>
+                    <div className="font-semibold text-lg">{`${userInfo.firstName || ""} ${userInfo.lastName || ""}`}</div>
+                    <div className="text-gray-500 text-sm">
+                      {userInfo.email}
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
@@ -1242,23 +1521,36 @@ export default function Profile() {
                   </div>
                   <div>
                     <div className="text-xs text-gray-400">Date of Birth</div>
-                    <div className="font-medium">{userInfo.dateOfBirth ? userInfo.dateOfBirth.slice(0, 10) : "-"}</div>
+                    <div className="font-medium">
+                      {userInfo.dateOfBirth
+                        ? userInfo.dateOfBirth.slice(0, 10)
+                        : "-"}
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-400">Gender</div>
                     <div className="font-medium">{userInfo.gender || "-"}</div>
                   </div>
                 </div>
-                <Button className="mt-6 w-32" onClick={() => setEditDialogOpen(true)}>Edit Profile</Button>
+                <Button
+                  className="mt-6 w-32"
+                  onClick={() => setEditDialogOpen(true)}
+                >
+                  Edit Profile
+                </Button>
                 <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Edit Profile</DialogTitle>
-                      <DialogDescription>Update your phone, date of birth, and gender.</DialogDescription>
+                      <DialogDescription>
+                        Update your phone, date of birth, and gender.
+                      </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleEditSubmit} className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium mb-1">Phone</label>
+                        <label className="block text-sm font-medium mb-1">
+                          Phone
+                        </label>
                         <Input
                           name="phone"
                           value={editForm.phone}
@@ -1267,7 +1559,9 @@ export default function Profile() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-1">Date of Birth</label>
+                        <label className="block text-sm font-medium mb-1">
+                          Date of Birth
+                        </label>
                         <Input
                           name="dateOfBirth"
                           type="date"
@@ -1276,7 +1570,9 @@ export default function Profile() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-1">Gender</label>
+                        <label className="block text-sm font-medium mb-1">
+                          Gender
+                        </label>
                         <select
                           name="gender"
                           value={editForm.gender}
@@ -1287,13 +1583,21 @@ export default function Profile() {
                           <option value="male">Male</option>
                           <option value="female">Female</option>
                           <option value="other">Other</option>
-                          <option value="prefer not to say">Prefer not to say</option>
+                          <option value="prefer not to say">
+                            Prefer not to say
+                          </option>
                         </select>
                       </div>
                       <div className="flex flex-col items-center gap-2">
-                        <label className="block text-sm font-medium mb-1">Profile Picture</label>
+                        <label className="block text-sm font-medium mb-1">
+                          Profile Picture
+                        </label>
                         {avatarPreview && (
-                          <img src={avatarPreview} alt="Avatar Preview" className="w-20 h-20 rounded-full object-cover border" />
+                          <img
+                            src={avatarPreview}
+                            alt="Avatar Preview"
+                            className="w-20 h-20 rounded-full object-cover border"
+                          />
                         )}
                         <input
                           type="file"
@@ -1302,12 +1606,20 @@ export default function Profile() {
                           disabled={avatarUploading}
                           className="mt-2"
                         />
-                        {avatarUploading && <span className="text-xs text-gray-500">Uploading...</span>}
+                        {avatarUploading && (
+                          <span className="text-xs text-gray-500">
+                            Uploading...
+                          </span>
+                        )}
                       </div>
                       <DialogFooter>
-                        <Button type="submit" disabled={editLoading}>{editLoading ? "Saving..." : "Save"}</Button>
+                        <Button type="submit" disabled={editLoading}>
+                          {editLoading ? "Saving..." : "Save"}
+                        </Button>
                         <DialogClose asChild>
-                          <Button type="button" variant="outline">Cancel</Button>
+                          <Button type="button" variant="outline">
+                            Cancel
+                          </Button>
                         </DialogClose>
                       </DialogFooter>
                     </form>
@@ -1325,16 +1637,32 @@ export default function Profile() {
           <ul className="space-y-4">
             {userInfo?.addressBook && userInfo.addressBook.length > 0 ? (
               userInfo.addressBook.map((addr: any, idx: number) => (
-                <li key={idx} className="bg-white p-4 md:p-6 rounded shadow flex flex-col md:flex-row md:items-center md:justify-between">
+                <li
+                  key={idx}
+                  className="bg-white p-4 md:p-6 rounded shadow flex flex-col md:flex-row md:items-center md:justify-between"
+                >
                   <div>
-                    <div className="font-semibold">{addr.label || "Address"}</div>
+                    <div className="font-semibold">
+                      {addr.label || "Address"}
+                    </div>
                     <div className="text-gray-500 text-sm">
-                      {addr.street}, {addr.city}, {addr.state} {addr.zip}, {addr.country}
+                      {addr.street}, {addr.city}, {addr.state} {addr.zip},{" "}
+                      {addr.country}
                     </div>
                   </div>
                   <div className="flex gap-2 mt-2 md:mt-0">
-                    <Button variant="outline" onClick={() => openEditAddressDialog(idx)}>Edit</Button>
-                    <Button variant="ghost" onClick={() => handleDeleteAddress(idx)} disabled={addressLoading} title="Delete address">
+                    <Button
+                      variant="outline"
+                      onClick={() => openEditAddressDialog(idx)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleDeleteAddress(idx)}
+                      disabled={addressLoading}
+                      title="Delete address"
+                    >
                       <Trash2 className="w-5 h-5 text-red-500" />
                     </Button>
                   </div>
@@ -1344,42 +1672,88 @@ export default function Profile() {
               <li className="text-gray-500">No addresses saved.</li>
             )}
           </ul>
-          <Button className="mt-6" onClick={openAddAddressDialog}>Add New Address</Button>
+          <Button className="mt-6" onClick={openAddAddressDialog}>
+            Add New Address
+          </Button>
           <Dialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{addressEditIndex !== null ? "Edit Address" : "Add Address"}</DialogTitle>
-                <DialogDescription>Fill in the address details below.</DialogDescription>
+                <DialogTitle>
+                  {addressEditIndex !== null ? "Edit Address" : "Add Address"}
+                </DialogTitle>
+                <DialogDescription>
+                  Fill in the address details below.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleAddressSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Label</label>
-                  <Input name="label" value={addressForm.label} onChange={handleAddressChange} placeholder="e.g. Home, Office" />
+                  <label className="block text-sm font-medium mb-1">
+                    Label
+                  </label>
+                  <Input
+                    name="label"
+                    value={addressForm.label}
+                    onChange={handleAddressChange}
+                    placeholder="e.g. Home, Office"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Street</label>
-                  <Input name="street" value={addressForm.street} onChange={handleAddressChange} required />
+                  <label className="block text-sm font-medium mb-1">
+                    Street
+                  </label>
+                  <Input
+                    name="street"
+                    value={addressForm.street}
+                    onChange={handleAddressChange}
+                    required
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">City</label>
-                  <Input name="city" value={addressForm.city} onChange={handleAddressChange} required />
+                  <Input
+                    name="city"
+                    value={addressForm.city}
+                    onChange={handleAddressChange}
+                    required
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">State</label>
-                  <Input name="state" value={addressForm.state} onChange={handleAddressChange} />
+                  <label className="block text-sm font-medium mb-1">
+                    State
+                  </label>
+                  <Input
+                    name="state"
+                    value={addressForm.state}
+                    onChange={handleAddressChange}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">ZIP</label>
-                  <Input name="zip" value={addressForm.zip} onChange={handleAddressChange} />
+                  <Input
+                    name="zip"
+                    value={addressForm.zip}
+                    onChange={handleAddressChange}
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Country</label>
-                  <Input name="country" value={addressForm.country} onChange={handleAddressChange} required />
+                  <label className="block text-sm font-medium mb-1">
+                    Country
+                  </label>
+                  <Input
+                    name="country"
+                    value={addressForm.country}
+                    onChange={handleAddressChange}
+                    required
+                  />
                 </div>
                 <DialogFooter>
-                  <Button type="submit" disabled={addressLoading}>{addressLoading ? "Saving..." : "Save"}</Button>
+                  <Button type="submit" disabled={addressLoading}>
+                    {addressLoading ? "Saving..." : "Save"}
+                  </Button>
                   <DialogClose asChild>
-                    <Button type="button" variant="outline">Cancel</Button>
+                    <Button type="button" variant="outline">
+                      Cancel
+                    </Button>
                   </DialogClose>
                 </DialogFooter>
               </form>
@@ -1390,6 +1764,7 @@ export default function Profile() {
     ),
     orders: <Orders />,
     wishlist: <Wishlist />,
+    returns: <Returns />,
     security: (
       <div className="p-4 md:p-8">
         <h2 className="text-2xl font-bold mb-4">Security Settings</h2>
@@ -1397,40 +1772,82 @@ export default function Profile() {
           <div className="font-semibold mb-2">Change Password</div>
           <Dialog open={changePwdOpen} onOpenChange={setChangePwdOpen}>
             <DialogTrigger asChild>
-          <Button variant="outline">Change</Button>
+              <Button variant="outline">Change</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Change Password</DialogTitle>
                 <DialogDescription>
-                  <div className="mb-2 text-xs text-gray-500">Step {changePwdStep} of 3</div>
-                  {changePwdStep === 1 && "Send OTP to your registered email to continue."}
+                  <div className="mb-2 text-xs text-gray-500">
+                    Step {changePwdStep} of 3
+                  </div>
+                  {changePwdStep === 1 &&
+                    "Send OTP to your registered email to continue."}
                   {changePwdStep === 2 && "Enter the OTP sent to your email."}
-                  {changePwdStep === 3 && "Enter your new password twice for confirmation."}
+                  {changePwdStep === 3 &&
+                    "Enter your new password twice for confirmation."}
                 </DialogDescription>
               </DialogHeader>
               {pwdError && <div className="text-red-500 mb-2">{pwdError}</div>}
-              {pwdSuccess && <div className="text-green-600 mb-2">{pwdSuccess}</div>}
+              {pwdSuccess && (
+                <div className="text-green-600 mb-2">{pwdSuccess}</div>
+              )}
               {changePwdStep === 1 && (
                 <div>
                   <Label>Email</Label>
-                  <Input value={userEmail} readOnly className="mb-4" ref={emailInputRef} />
-                  <Button onClick={handleSendOtp} disabled={pwdLoading} className="w-full flex items-center justify-center">
-                    {pwdLoading && <Loader2 className="animate-spin h-4 w-4 mr-2" />}Send OTP
+                  <Input
+                    value={userEmail}
+                    readOnly
+                    className="mb-4"
+                    ref={emailInputRef}
+                  />
+                  <Button
+                    onClick={handleSendOtp}
+                    disabled={pwdLoading}
+                    className="w-full flex items-center justify-center"
+                  >
+                    {pwdLoading && (
+                      <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                    )}
+                    Send OTP
                   </Button>
-        </div>
+                </div>
               )}
               {changePwdStep === 2 && (
                 <form onSubmit={handleVerifyOtp} className="space-y-4">
                   <Label>OTP</Label>
                   <div className="flex gap-2 items-center mb-2">
-                    <Input value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ""))} required maxLength={6} ref={otpInputRef} className="w-32" />
-                    <Button type="button" variant="ghost" onClick={handleResendOtp} disabled={otpCooldown > 0 || pwdLoading} className="text-xs">
-                      {otpCooldown > 0 ? `Resend OTP (${otpCooldown}s)` : "Resend OTP"}
+                    <Input
+                      value={otp}
+                      onChange={(e) =>
+                        setOtp(e.target.value.replace(/\D/g, ""))
+                      }
+                      required
+                      maxLength={6}
+                      ref={otpInputRef}
+                      className="w-32"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={handleResendOtp}
+                      disabled={otpCooldown > 0 || pwdLoading}
+                      className="text-xs"
+                    >
+                      {otpCooldown > 0
+                        ? `Resend OTP (${otpCooldown}s)`
+                        : "Resend OTP"}
                     </Button>
                   </div>
-                  <Button type="submit" disabled={!isOtpValid || pwdLoading} className="w-full flex items-center justify-center">
-                    {pwdLoading && <Loader2 className="animate-spin h-4 w-4 mr-2" />}Verify OTP
+                  <Button
+                    type="submit"
+                    disabled={!isOtpValid || pwdLoading}
+                    className="w-full flex items-center justify-center"
+                  >
+                    {pwdLoading && (
+                      <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                    )}
+                    Verify OTP
                   </Button>
                 </form>
               )}
@@ -1441,34 +1858,71 @@ export default function Profile() {
                     <Input
                       type={showNewPwd ? "text" : "password"}
                       value={newPwd}
-                      onChange={e => setNewPwd(e.target.value)}
+                      onChange={(e) => setNewPwd(e.target.value)}
                       required
                       minLength={6}
                       ref={pwdInputRef}
                       className={isPwdValid ? "pr-10" : "pr-10 border-red-500"}
                     />
-                    <button type="button" className="absolute right-2 top-2 text-gray-400" onClick={() => setShowNewPwd(v => !v)} tabIndex={-1}>
-                      {showNewPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    <button
+                      type="button"
+                      className="absolute right-2 top-2 text-gray-400"
+                      onClick={() => setShowNewPwd((v) => !v)}
+                      tabIndex={-1}
+                    >
+                      {showNewPwd ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
                     </button>
                   </div>
-                  {!isPwdValid && newPwd.length > 0 && <div className="text-xs text-red-500 mb-1">Password must be at least 6 characters.</div>}
+                  {!isPwdValid && newPwd.length > 0 && (
+                    <div className="text-xs text-red-500 mb-1">
+                      Password must be at least 6 characters.
+                    </div>
+                  )}
                   <Label>Confirm New Password</Label>
                   <div className="relative mb-2">
                     <Input
                       type={showConfirmPwd ? "text" : "password"}
                       value={confirmPwd}
-                      onChange={e => setConfirmPwd(e.target.value)}
+                      onChange={(e) => setConfirmPwd(e.target.value)}
                       required
                       minLength={6}
-                      className={isPwdMatch || confirmPwd.length === 0 ? "pr-10" : "pr-10 border-red-500"}
+                      className={
+                        isPwdMatch || confirmPwd.length === 0
+                          ? "pr-10"
+                          : "pr-10 border-red-500"
+                      }
                     />
-                    <button type="button" className="absolute right-2 top-2 text-gray-400" onClick={() => setShowConfirmPwd(v => !v)} tabIndex={-1}>
-                      {showConfirmPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    <button
+                      type="button"
+                      className="absolute right-2 top-2 text-gray-400"
+                      onClick={() => setShowConfirmPwd((v) => !v)}
+                      tabIndex={-1}
+                    >
+                      {showConfirmPwd ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
                     </button>
                   </div>
-                  {!isPwdMatch && confirmPwd.length > 0 && <div className="text-xs text-red-500 mb-1">Passwords do not match.</div>}
-                  <Button type="submit" disabled={!isPwdMatch || pwdLoading} className="w-full flex items-center justify-center">
-                    {pwdLoading && <Loader2 className="animate-spin h-4 w-4 mr-2" />}Change Password
+                  {!isPwdMatch && confirmPwd.length > 0 && (
+                    <div className="text-xs text-red-500 mb-1">
+                      Passwords do not match.
+                    </div>
+                  )}
+                  <Button
+                    type="submit"
+                    disabled={!isPwdMatch || pwdLoading}
+                    className="w-full flex items-center justify-center"
+                  >
+                    {pwdLoading && (
+                      <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                    )}
+                    Change Password
                   </Button>
                 </form>
               )}
@@ -1485,11 +1939,16 @@ export default function Profile() {
         ) : reviewsError ? (
           <div className="text-red-500">{reviewsError}</div>
         ) : userReviews.length === 0 ? (
-          <div className="text-gray-500">You haven't written any reviews yet.</div>
+          <div className="text-gray-500">
+            You haven't written any reviews yet.
+          </div>
         ) : (
           <ul className="space-y-4">
             {userReviews.map((review) => (
-              <li key={review._id} className="bg-white p-4 rounded shadow flex items-start gap-4">
+              <li
+                key={review._id}
+                className="bg-white p-4 rounded shadow flex items-start gap-4"
+              >
                 {review.productImage && (
                   <img
                     src={review.productImage}
@@ -1510,41 +1969,60 @@ export default function Profile() {
                       onSubmit={async (e) => {
                         e.preventDefault();
                         if (!editReviewRating) {
-                          toast({ title: "Please select a rating.", variant: "destructive" });
+                          toast({
+                            title: "Please select a rating.",
+                            variant: "destructive",
+                          });
                           return;
                         }
                         if (!editReviewText.trim()) {
-                          toast({ title: "Please write a review.", variant: "destructive" });
+                          toast({
+                            title: "Please write a review.",
+                            variant: "destructive",
+                          });
                           return;
                         }
                         setEditLoading(true);
                         try {
-                          const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reviews/${review._id}`, {
-                            method: "PATCH",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({
-                              rating: editReviewRating,
-                              review: editReviewText.trim(),
-                            }),
-                          });
+                          const res = await fetch(
+                            `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reviews/${review._id}`,
+                            {
+                              method: "PATCH",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${token}`,
+                              },
+                              body: JSON.stringify({
+                                rating: editReviewRating,
+                                review: editReviewText.trim(),
+                              }),
+                            }
+                          );
                           const data = await res.json();
-                          if (!res.ok) throw new Error(data.msg || "Failed to update review");
+                          if (!res.ok)
+                            throw new Error(
+                              data.msg || "Failed to update review"
+                            );
                           toast({ title: "Review updated!" });
                           setEditingReviewId(null);
                           // Refresh reviews
                           setLoadingReviews(true);
-                          const reviewsRes = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reviews/user`, {
-                            headers: { Authorization: `Bearer ${token}` },
-                          });
+                          const reviewsRes = await fetch(
+                            `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reviews/user`,
+                            {
+                              headers: { Authorization: `Bearer ${token}` },
+                            }
+                          );
                           if (reviewsRes.ok) {
                             const reviewsData = await reviewsRes.json();
                             setUserReviews(reviewsData.reviews || []);
                           }
                         } catch (err: any) {
-                          toast({ title: "Failed to update review", description: err.message, variant: "destructive" });
+                          toast({
+                            title: "Failed to update review",
+                            description: err.message,
+                            variant: "destructive",
+                          });
                         } finally {
                           setEditLoading(false);
                           setLoadingReviews(false);
@@ -1560,7 +2038,11 @@ export default function Profile() {
                             className="focus:outline-none"
                             aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
                           >
-                            <span className={`text-2xl ${editReviewRating >= star ? "text-yellow-400" : "text-gray-300"}`}>★</span>
+                            <span
+                              className={`text-2xl ${editReviewRating >= star ? "text-yellow-400" : "text-gray-300"}`}
+                            >
+                              ★
+                            </span>
                           </button>
                         ))}
                       </div>
@@ -1591,8 +2073,12 @@ export default function Profile() {
                     </form>
                   ) : (
                     <>
-                      <div className="text-gray-600 text-sm mb-1">"{review.review}"</div>
-                      <div className="text-xs text-gray-400 mb-2">{new Date(review.createdAt).toLocaleDateString()}</div>
+                      <div className="text-gray-600 text-sm mb-1">
+                        "{review.review}"
+                      </div>
+                      <div className="text-xs text-gray-400 mb-2">
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </div>
                       <div className="flex space-x-2 mt-1">
                         <button
                           className="text-blue-600 hover:underline"
@@ -1607,27 +2093,45 @@ export default function Profile() {
                         <button
                           className="text-red-600 hover:underline"
                           onClick={async () => {
-                            if (!window.confirm("Are you sure you want to delete this review?")) return;
+                            if (
+                              !window.confirm(
+                                "Are you sure you want to delete this review?"
+                              )
+                            )
+                              return;
                             setEditLoading(true);
                             try {
-                              const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reviews/${review._id}`, {
-                                method: "DELETE",
-                                headers: { Authorization: `Bearer ${token}` },
-                              });
+                              const res = await fetch(
+                                `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reviews/${review._id}`,
+                                {
+                                  method: "DELETE",
+                                  headers: { Authorization: `Bearer ${token}` },
+                                }
+                              );
                               const data = await res.json();
-                              if (!res.ok) throw new Error(data.msg || "Failed to delete review");
+                              if (!res.ok)
+                                throw new Error(
+                                  data.msg || "Failed to delete review"
+                                );
                               toast({ title: "Review deleted!" });
                               // Refresh reviews
                               setLoadingReviews(true);
-                              const reviewsRes = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reviews/user`, {
-                                headers: { Authorization: `Bearer ${token}` },
-                              });
+                              const reviewsRes = await fetch(
+                                `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reviews/user`,
+                                {
+                                  headers: { Authorization: `Bearer ${token}` },
+                                }
+                              );
                               if (reviewsRes.ok) {
                                 const reviewsData = await reviewsRes.json();
                                 setUserReviews(reviewsData.reviews || []);
                               }
                             } catch (err: any) {
-                              toast({ title: "Failed to delete review", description: err.message, variant: "destructive" });
+                              toast({
+                                title: "Failed to delete review",
+                                description: err.message,
+                                variant: "destructive",
+                              });
                             } finally {
                               setEditLoading(false);
                               setLoadingReviews(false);
@@ -1653,11 +2157,17 @@ export default function Profile() {
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
       {loadingUser ? (
-        <div className="w-full flex justify-center items-center h-96 text-gray-500 text-lg">Loading user info...</div>
+        <div className="w-full flex justify-center items-center h-96 text-gray-500 text-lg">
+          Loading user info...
+        </div>
       ) : userError ? (
-        <div className="w-full flex justify-center items-center h-96 text-red-500 text-lg">{userError}</div>
+        <div className="w-full flex justify-center items-center h-96 text-red-500 text-lg">
+          {userError}
+        </div>
       ) : !userInfo ? (
-        <div className="w-full flex justify-center items-center h-96 text-gray-500 text-lg">No user info available.</div>
+        <div className="w-full flex justify-center items-center h-96 text-gray-500 text-lg">
+          No user info available.
+        </div>
       ) : (
         <>
           {/* Mobile Header */}
@@ -1665,13 +2175,17 @@ export default function Profile() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={userInfo.avatar || "/placeholder.svg"} alt="Profile" />
+                  <AvatarImage
+                    src={userInfo.avatar || "/placeholder.svg"}
+                    alt="Profile"
+                  />
                   <AvatarFallback className="bg-gray-900 text-white">
-                    {(userInfo.firstName?.[0] || '') + (userInfo.lastName?.[0] || '') || 'U'}
+                    {(userInfo.firstName?.[0] || "") +
+                      (userInfo.lastName?.[0] || "") || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">{`${userInfo.firstName || ''} ${userInfo.lastName || ''}`}</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">{`${userInfo.firstName || ""} ${userInfo.lastName || ""}`}</h2>
                 </div>
               </div>
               <Button
@@ -1769,14 +2283,18 @@ export default function Profile() {
             <div className="p-6 border-b">
               <div className="flex items-center space-x-3">
                 <Avatar className="h-14 w-14">
-                  <AvatarImage src={userInfo?.avatar || "/placeholder.svg"} alt="Profile" />
+                  <AvatarImage
+                    src={userInfo?.avatar || "/placeholder.svg"}
+                    alt="Profile"
+                  />
                   <AvatarFallback className="bg-gray-900 text-white">
-                    {(userInfo.firstName?.[0] || '') + (userInfo.lastName?.[0] || '') || 'U'}
+                    {(userInfo.firstName?.[0] || "") +
+                      (userInfo.lastName?.[0] || "") || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">
-                    {`${userInfo.firstName || ''} ${userInfo.lastName || ''}`}
+                    {`${userInfo.firstName || ""} ${userInfo.lastName || ""}`}
                   </h2>
                 </div>
               </div>

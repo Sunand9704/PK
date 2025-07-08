@@ -21,6 +21,10 @@ const adminCouponsRoutes = require("./routes/adminCoupons");
 const couponsRoutes = require("./routes/coupons");
 const notificationRoutes = require("./routes/notifications");
 const contactRoutes = require("./routes/contact");
+const heroCarouselRoutes = require("./routes/heroCarousel");
+const adminHeroCarouselRoutes = require("./routes/adminHeroCarousel");
+const returnsRoutes = require("./routes/returns");
+const adminReturnsRoutes = require("./routes/adminReturns");
 
 // Load env vars
 dotenv.config();
@@ -45,8 +49,8 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       "http://localhost:3000", // Fallback for development
       "http://localhost:5173", // Vite development server
       // Add your production frontend URL here
-  // "https://yourdomain.com",
-  // "https://www.yourdomain.com",
+      // "https://yourdomain.com",
+      // "https://www.yourdomain.com",
     ];
 
 app.use(
@@ -82,6 +86,10 @@ app.use("/api/admin/coupons", adminCouponsRoutes);
 app.use("/api/coupons", couponsRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/hero-carousel", heroCarouselRoutes);
+app.use("/api/admin/hero-carousel", adminHeroCarouselRoutes);
+app.use("/api/returns", returnsRoutes);
+app.use("/api/admin/returns", adminReturnsRoutes);
 
 // Error Handler
 app.use(errorHandler);
