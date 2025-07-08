@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
 
 interface DashboardStatsData {
   totalRevenue: number;
@@ -76,7 +77,7 @@ export const DashboardStats: React.FC = () => {
       try {
         const token = localStorage.getItem("admin_token");
         const response = await fetch(
-          "http://localhost:8000/api/dashboard/stats",
+          `${API_BASE_URL}${API_ENDPOINTS.DASHBOARD_STATS}`,
           {
             headers: {
               "Content-Type": "application/json",

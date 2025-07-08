@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
 
 // Dummy data commented out for real API integration
 // const users = [ ... ];
@@ -48,7 +49,7 @@ export const UserTable: React.FC<UserTableProps> = ({ searchTerm }) => {
       try {
         const token = localStorage.getItem("admin_token");
         // Fetch users
-        const userRes = await fetch("http://localhost:8000/api/user/users", {
+        const userRes = await fetch(`${API_BASE_URL}${API_ENDPOINTS.USERS}`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -58,7 +59,7 @@ export const UserTable: React.FC<UserTableProps> = ({ searchTerm }) => {
         if (!userRes.ok)
           throw new Error(userData.message || "Failed to fetch users");
         // Fetch orders
-        const orderRes = await fetch("http://localhost:8000/api/orders", {
+        const orderRes = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ORDERS}`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,

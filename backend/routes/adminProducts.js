@@ -31,6 +31,6 @@ router.put(
   ],
   adminProductController.updateProduct
 );
-router.delete("/:id", auth, admin, adminProductController.deleteProduct);
+router.delete("/:id",adminProductController.deleteProduct);
 
 module.exports = router;

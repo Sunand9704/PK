@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
 
 // Dummy data commented out for real API integration
 // const orders = [ ... ];
@@ -66,7 +67,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
       setError(null);
       try {
         const token = localStorage.getItem("admin_token");
-        const res = await fetch("http://localhost:8000/api/orders", {
+        const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ORDERS}`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -90,7 +91,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
     try {
       const token = localStorage.getItem("admin_token");
       const res = await fetch(
-        `http://localhost:8000/api/orders/${orderId}/status`,
+        `${API_BASE_URL}${API_ENDPOINTS.ORDER_STATUS(orderId)}`,
         {
           method: "PATCH",
           headers: {

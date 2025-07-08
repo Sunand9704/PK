@@ -7,8 +7,8 @@ const nodemailer = require("nodemailer");
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "laptoptest7788@gmail.com",
-    pass: "uqfiabjkiqudrgdw",
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
@@ -124,11 +124,10 @@ exports.createOrder = async (req, res, next) => {
       status: paymentMethod === "cod" ? "pending" : "processing",
       discount: req.body.discount || 0,
       finalPrice: req.body.finalPrice || price,
-      couponCode: req.body.couponCode || '',
+      couponCode: req.body.couponCode || "",
     });
 
     await order.save();
-
 
     // Create notification for new order
     try {
@@ -149,7 +148,6 @@ exports.createOrder = async (req, res, next) => {
     } catch (error) {
       console.error("Error creating notification:", error);
     }
-
 
     // Update product soldCount for successful orders (non-cod orders are considered successful immediately)
     if (paymentMethod !== "cod") {
@@ -198,7 +196,9 @@ exports.createOrder = async (req, res, next) => {
   } catch (error) {
     // Duplicate key error (e.g., unique constraint)
     if (error.code === 11000) {
-      return res.status(400).json({ msg: "You have already placed an order for this product." });
+      return res
+        .status(400)
+        .json({ msg: "You have already placed an order for this product." });
     }
     // Mongoose validation error
     if (error.name === "ValidationError") {

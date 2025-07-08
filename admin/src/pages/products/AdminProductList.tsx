@@ -38,8 +38,9 @@ interface Product {
   createdAt: string;
 }
 
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
+
 const PAGE_SIZE = 10;
-const baseUrl = "http://localhost:8000";
 const SORTABLE = [
   { key: "name", label: "Name" },
   { key: "category", label: "Category" },
@@ -77,7 +78,9 @@ const AdminProductList: React.FC = () => {
       params.append("category", categoryFilter);
     if (stockFilter && stockFilter !== "all")
       params.append("inStock", stockFilter);
-    const res = await fetch(`${baseUrl}/api/products?${params.toString()}`);
+    const res = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.PRODUCTS}?${params.toString()}`
+    );
     const data = await res.json();
     setProducts(data.products);
     setTotal(data.total);
@@ -104,7 +107,7 @@ const AdminProductList: React.FC = () => {
   const handleDelete = async () => {
     if (!pendingDeleteId) return;
     const res = await fetch(
-      `${baseUrl}/api/admin/products/${pendingDeleteId}`,
+      `${API_BASE_URL}${API_ENDPOINTS.PRODUCT_DETAIL(pendingDeleteId)}`,
       {
         method: "DELETE",
         credentials: "include",
@@ -169,7 +172,7 @@ const AdminProductList: React.FC = () => {
 
   return (
     <motion.div
-      className="p-6"
+      className="bg-white rounded-lg shadow-md"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}

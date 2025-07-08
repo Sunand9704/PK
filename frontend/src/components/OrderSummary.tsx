@@ -237,7 +237,7 @@ const OrderSummary = ({
     document.body.appendChild(script);
     script.onload = async () => {
       const options = {
-        key: "rzp_test_1DP5mmOlF5G5ag", // Razorpay test key
+        key: import.meta.env.RAZOR_PAY_KEY, // Razorpay test key
         amount: Math.round(finalTotal * 100),
         currency: "INR",
         name: "PK Trends",

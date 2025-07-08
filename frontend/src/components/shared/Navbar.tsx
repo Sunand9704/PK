@@ -53,7 +53,7 @@ const Navbar = () => {
       setIsSearching(true);
       try {
         const response = await fetch(
-          `http://localhost:8000/api/products?search=${encodeURIComponent(term)}&limit=12`
+          `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/products?search=${encodeURIComponent(term)}&limit=12`
         );
         const data = await response.json();
         setSearchResults(data.products || []);

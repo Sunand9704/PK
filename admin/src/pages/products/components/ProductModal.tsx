@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -45,14 +46,16 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const { toast } = useToast();
   const [localImages, setLocalImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const baseUrl = "http://localhost:8000";
   const [rawInputs, setRawInputs] = useState({
     sizes: "",
     colors: "",
     features: "",
   });
   const [loading, setLoading] = useState(false);
-  const getToken = () => localStorage.getItem("admin_token");
+  const getToken = () => {
+    const token = localStorage.getItem("admin_token");
+    return token;
+  };
 
   useEffect(() => {
     if (product) {
@@ -158,7 +161,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const uploadImageToServer = async (file: File) => {
     const formData = new FormData();
     formData.append("image", file);
-    const res = await fetch(`${baseUrl}/api/upload`, {
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.UPLOAD}`, {
       method: "POST",
       body: formData,
     });
@@ -207,25 +210,26 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       let res;
       if (product && product._id) {
         // Update
-        res = await fetch(`${baseUrl}/api/admin/products/${product._id}`, {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(productData),
-          credentials: "include",
-        });
+        res = await fetch(
+          `${API_BASE_URL}${API_ENDPOINTS.PRODUCT_DETAIL(product._id)}`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${getToken()}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(productData),
+          }
+        );
       } else {
         // Create
-        res = await fetch(`${baseUrl}/api/admin/products`, {
+        res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_PRODUCTS}`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${getToken()}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify(productData),
-          credentials: "include",
         });
       }
       if (!res.ok) {

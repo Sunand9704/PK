@@ -18,6 +18,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -37,7 +38,6 @@ const SignIn = () => {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotError, setForgotError] = useState("");
   const [forgotSuccess, setForgotSuccess] = useState("");
-  const baseUrl = "http://localhost:8000";
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -55,7 +55,7 @@ const SignIn = () => {
     setSuccess("");
     setLoading(true);
     try {
-      const res = await fetch(`${baseUrl}/api/auth/login`, {
+      const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LOGIN}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -87,11 +87,14 @@ const SignIn = () => {
     setForgotLoading(true);
     try {
       // Placeholder API call
-      const res = await fetch(`${baseUrl}/api/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail }),
-      });
+      const res = await fetch(
+        `${API_BASE_URL}${API_ENDPOINTS.FORGOT_PASSWORD}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: forgotEmail }),
+        }
+      );
       const data = await res.json();
       if (res.ok && data.success) {
         setForgotSuccess("OTP sent to your email!");
@@ -114,7 +117,7 @@ const SignIn = () => {
     setForgotLoading(true);
     try {
       // Placeholder API call
-      const res = await fetch(`${baseUrl}/api/auth/verify-otp`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail, otp: forgotOtp }),
@@ -145,15 +148,18 @@ const SignIn = () => {
     setForgotLoading(true);
     try {
       // Placeholder API call
-      const res = await fetch(`${baseUrl}/api/auth/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: forgotEmail,
-          otp: forgotOtp,
-          password: forgotNewPassword,
-        }),
-      });
+      const res = await fetch(
+        `${API_BASE_URL}${API_ENDPOINTS.RESET_PASSWORD}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: forgotEmail,
+            otp: forgotOtp,
+            password: forgotNewPassword,
+          }),
+        }
+      );
       const data = await res.json();
       if (res.ok && data.success) {
         setForgotSuccess("Password reset successful! You can now sign in.");
