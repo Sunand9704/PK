@@ -240,8 +240,7 @@ const OrderSummary = ({
     script.onload = async () => {
       console.log("came to razorpay function key send section");
       const options = {
-        
-        
+
         key: import.meta.env.VITE_RAZOR_PAY_KEY, // Razorpay test key
         amount: Math.round(finalTotal * 100),
         currency: "INR",
@@ -250,6 +249,8 @@ const OrderSummary = ({
         handler: async function (response: any) {
           // Create order after successful payment
           const success = await createOrder("razorpay");
+          console.log(success);
+          
           if (success) {
             setPaymentSuccess(true);
             setShowPayment(false);

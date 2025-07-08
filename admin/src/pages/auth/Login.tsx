@@ -24,6 +24,7 @@ export const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login, user, error, clearError } = useAuth();
   const { toast } = useToast();
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   // Forgot password states
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -41,8 +42,30 @@ export const Login: React.FC = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
+  // Validation function
+  const validate = () => {
+    const newErrors: { [key: string]: string } = {};
+    if (!email) {
+      newErrors.email = "Email is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+      newErrors.email = "Invalid email format";
+    }
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+    return newErrors;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const validationErrors = validate();
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     clearError();
 
@@ -55,7 +78,6 @@ export const Login: React.FC = () => {
     } catch (error: any) {
       // Error is already set in the context, so we don't need to show toast here
       // The error will be displayed in the UI below
-      console.error("Login error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -220,6 +242,7 @@ export const Login: React.FC = () => {
                 required
                 disabled={isLoading}
               />
+              {errors.email && <div className="text-red-500 text-xs">{errors.email}</div>}
             </div>
           </div>
 
@@ -240,6 +263,7 @@ export const Login: React.FC = () => {
                 required
                 disabled={isLoading}
               />
+              {errors.password && <div className="text-red-500 text-xs">{errors.password}</div>}
               <Button
                 type="button"
                 variant="ghost"

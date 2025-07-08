@@ -61,7 +61,6 @@ const seed = async () => {
     const products = await Product.find();
 
     if (products.length === 0) {
-      console.log("No products found. Please seed products first.");
       process.exit(1);
     }
 
@@ -86,7 +85,6 @@ const seed = async () => {
     }));
 
     await Review.insertMany(reviewsWithProducts);
-    console.log("Database seeded with reviews!");
     process.exit();
   } catch (err) {
     console.error(err);

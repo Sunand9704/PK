@@ -71,7 +71,6 @@ const Products = () => {
         const data = await response.json();
         setProducts(data.products || []);
       } catch (err) {
-        console.error("Error fetching products:", err);
         setError(err.message);
         setProducts([]);
       } finally {
@@ -90,7 +89,7 @@ const Products = () => {
           );
           // Handle individual product fetch if needed
         } catch (error) {
-          console.error("Error fetching individual product:", error);
+          // No need to log this error as it's handled in the error handling section
         }
       }
     }
