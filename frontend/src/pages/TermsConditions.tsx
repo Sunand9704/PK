@@ -160,7 +160,7 @@ const TermsConditions = () => {
             </div>
             <div className="text-gray-700 space-y-3">
               <p>
-                All prices are shown in USD and are subject to change without
+                All prices are shown in IND and are subject to change without
                 notice. Prices do not include applicable taxes, shipping, or
                 handling charges.
               </p>
