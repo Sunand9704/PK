@@ -346,7 +346,6 @@ const Disclaimer = () => {
               <div className="flex items-center">
                 <MapPin className="w-4 h-4 mr-2 text-gray-500" />
                 <span>
-                <span>
                   <strong>Address:</strong> Srinivas Center , Nandyala , Telagana,India
                 </span>
               </div>
