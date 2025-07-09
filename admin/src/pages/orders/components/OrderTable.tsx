@@ -102,7 +102,8 @@ export const OrderTable: React.FC<OrderTableProps> = ({
         }
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to update status");
+      if (!res.ok)
+        throw new Error(data.message || data.msg || "Failed to update status");
       setOrders((prev) =>
         prev.map((order) =>
           order._id === orderId ? { ...order, status: newStatus } : order

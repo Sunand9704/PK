@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Products = () => {
   const location = useLocation();
@@ -120,9 +121,17 @@ const Products = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-xl text-gray-600">Loading products...</p>
+        <div className="w-full max-w-6xl">
+          <div className="flex flex-wrap justify-center gap-4 mb-6">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-10 w-32 rounded" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-8">
+            {[...Array(8)].map((_, i) => (
+              <Skeleton key={i} className="h-80 w-full rounded-lg" />
+            ))}
+          </div>
         </div>
       </div>
     );

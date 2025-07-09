@@ -43,6 +43,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const menuItems = [
   {
@@ -105,7 +106,16 @@ const Wishlist: React.FC = () => {
     );
   }
   if (loading) {
-    return <div className="p-4 md:p-8">Loading wishlist...</div>;
+    return (
+      <div className="p-4 md:p-8">
+        <Skeleton className="h-8 w-32 mb-6" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-80 w-full rounded-lg" />
+          ))}
+        </div>
+      </div>
+    );
   }
   if (wishlist.length === 0) {
     return (
@@ -365,7 +375,25 @@ const Orders: React.FC = () => {
     );
   }
   if (loading) {
-    return <div className="p-4 md:p-8">Loading orders...</div>;
+    return (
+      <div className="p-4 md:p-8">
+        <Skeleton className="h-8 w-48 mb-6" />
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-white p-4 rounded shadow flex flex-col sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <Skeleton className="h-10 w-16 mt-2 sm:mt-0" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
   if (orders.length === 0) {
     return (
@@ -773,11 +801,16 @@ const Orders: React.FC = () => {
                   className="w-full bg-blue-600 text-white mt-4"
                   onClick={() => {
                     // 2-day return restriction logic
-                    const deliveredAt = selectedOrder.updatedAt ? new Date(selectedOrder.updatedAt) : null;
+                    const deliveredAt = selectedOrder.updatedAt
+                      ? new Date(selectedOrder.updatedAt)
+                      : null;
                     const now = new Date();
                     if (
                       deliveredAt &&
-                      Math.floor((now.getTime() - deliveredAt.getTime()) / (1000 * 60 * 60 * 24)) > 2
+                      Math.floor(
+                        (now.getTime() - deliveredAt.getTime()) /
+                          (1000 * 60 * 60 * 24)
+                      ) > 2
                     ) {
                       toast({
                         title: "Return period expired",
@@ -1016,14 +1049,21 @@ const Returns: React.FC = () => {
     return (
       <div className="p-4 md:p-8">Please sign in to view your requests.</div>
     );
-  if (loading) return <div className="p-4 md:p-8">Loading requests...</div>;
-  if (requests.length === 0)
+  if (loading)
     return (
-      <div className="p-4 md:p-8">No return or  requests found.</div>
+      <div className="p-4 md:p-8">
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-20 w-full rounded" />
+          ))}
+        </div>
+      </div>
     );
+  if (requests.length === 0)
+    return <div className="p-4 md:p-8">No return or requests found.</div>;
   return (
     <div className="p-4 md:p-8">
-      <h2 className="text-2xl font-bold mb-4">Return  Requests</h2>
+      <h2 className="text-2xl font-bold mb-4">Return Requests</h2>
       <ul className="space-y-4">
         {requests.map((req) => (
           <li key={req._id} className="bg-white p-4 rounded shadow">
@@ -1051,9 +1091,11 @@ const Returns: React.FC = () => {
               </div>
               <div>Date: {new Date(req.createdAt).toLocaleDateString()}</div>
             </div>
-            {req.status === 'approved' && (
-    <div className="mt-2 text-blue-600 font-medium">Wait for admin delivered status</div>
-  )}
+            {req.status === "approved" && (
+              <div className="mt-2 text-blue-600 font-medium">
+                Wait for admin delivered status
+              </div>
+            )}
             <div className="mt-2 text-gray-700 text-sm">
               Reason: {req.reason}
             </div>
@@ -1491,7 +1533,21 @@ export default function Profile() {
           <h2 className="text-2xl font-bold mb-4">User Information</h2>
           <div className="bg-white p-4 md:p-6 rounded shadow flex flex-col gap-4">
             {loadingUser ? (
-              <div className="text-gray-500">Loading user info...</div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-16 w-16 rounded-full" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-6 w-1/2" />
+                    <Skeleton className="h-4 w-1/3" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-8 w-full" />
+                  ))}
+                </div>
+                <Skeleton className="h-10 w-32 mt-6" />
+              </div>
             ) : userError ? (
               <div className="text-red-500">{userError}</div>
             ) : userInfo ? (
@@ -1935,7 +1991,26 @@ export default function Profile() {
       <div className="p-4 md:p-8">
         <h2 className="text-2xl font-bold mb-4">Reviews & Ratings</h2>
         {loadingReviews ? (
-          <div>Loading reviews...</div>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-white p-4 rounded shadow flex items-start gap-4"
+              >
+                <Skeleton className="w-16 h-16 rounded border" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <div className="flex space-x-2">
+                    <Skeleton className="h-4 w-8" />
+                    <Skeleton className="h-4 w-12" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : reviewsError ? (
           <div className="text-red-500">{reviewsError}</div>
         ) : userReviews.length === 0 ? (
@@ -2157,8 +2232,20 @@ export default function Profile() {
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
       {loadingUser ? (
-        <div className="w-full flex justify-center items-center h-96 text-gray-500 text-lg">
-          Loading user info...
+        <div className="w-full flex justify-center items-center h-96">
+          <div className="space-y-4 w-full max-w-xl">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-14 w-14 rounded-full" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-6 w-1/2" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-8 w-full" />
+              ))}
+            </div>
+          </div>
         </div>
       ) : userError ? (
         <div className="w-full flex justify-center items-center h-96 text-red-500 text-lg">

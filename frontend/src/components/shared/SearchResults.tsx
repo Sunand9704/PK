@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Star, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
+import { Skeleton } from "@/components/ui/skeleton";
+import ProductCard from "@/components/shared/ProductCard";
+import { Product as ProductType } from "@/data/products";
 
 const imgPlaceholderUrl =
   "https://res.cloudinary.com/dk6rrrwum/image/upload/v1751738007/placeholder_szfmym.svg";
@@ -95,10 +98,10 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3, 4, 5, 6].map((index) => (
-              <div key={index} className="animate-pulse">
-                <div className="bg-gray-200 h-48 rounded-lg mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              <div key={index}>
+                <Skeleton className="bg-gray-200 h-48 rounded-lg mb-2" />
+                <Skeleton className="h-4 bg-gray-200 rounded mb-2" />
+                <Skeleton className="h-4 bg-gray-200 rounded w-2/3" />
               </div>
             ))}
           </div>
@@ -109,16 +112,21 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+      <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto relative">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">
             Search Results for "{searchTerm}"
           </h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            ×
-          </Button>
         </div>
-
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="fixed top-4 right-4 z-50 bg-gray-200 hover:bg-gray-300 text-black rounded-full shadow"
+          aria-label="Close search results"
+        >
+          ×
+        </Button>
         {products.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500 text-lg">
@@ -130,99 +138,43 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {products.map((product) => (
-              <Card
-                key={product._id}
-                className="overflow-hidden hover:shadow-lg transition-shadow"
-              >
-                <div className="relative">
-                  <img
-                    src={getImageSrc(product)}
-                    alt={product.name}
-                    className="w-full h-48 object-cover"
-                    onError={() => handleImageError(product._id)}
-                  />
-                  {!product.inStock && (
-                    <div className="absolute top-2 right-2">
-                      <Badge variant="destructive">Out of Stock</Badge>
-                    </div>
-                  )}
-                  {product.originalPrice &&
-                    product.originalPrice > product.price && (
-                      <div className="absolute top-2 left-2">
-                        <Badge variant="secondary">
-                          {Math.round(
-                            ((product.originalPrice - product.price) /
-                              product.originalPrice) *
-                              100
-                          )}
-                          % OFF
-                        </Badge>
-                      </div>
-                    )}
-                </div>
-                <CardContent className="p-4">
-                  <div className="mb-2">
-                    <Badge variant="outline" className="text-xs">
-                      {product.category}
-                    </Badge>
-                  </div>
-                  <Link to={`/products/${product._id}`}>
-                    <h3 className="font-semibold text-lg mb-2 hover:text-blue-600 transition-colors">
-                      {product.name}
-                    </h3>
-                  </Link>
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                    {product.description}
-                  </p>
-
-                  <div className="flex items-center mb-2">
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < Math.floor(product.rating)
-                              ? "text-yellow-400 fill-current"
-                              : "text-gray-300"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-sm text-gray-500 ml-1">
-                      ({product.reviews})
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <span className="text-lg font-bold text-green-600">
-                        {formatCurrency(product.price)}
-                      </span>
-                      {product.originalPrice &&
-                        product.originalPrice > product.price && (
-                          <span className="text-sm text-gray-500 line-through ml-2">
-                            {formatCurrency(product.originalPrice)}
-                          </span>
-                        )}
-                    </div>
-                    <span className="text-sm text-gray-500">
-                      {product.soldCount} sold
-                    </span>
-                  </div>
-
-                  <Button
-                    onClick={() => handleAddToCart(product)}
-                    disabled={!product.inStock}
-                    className="w-full"
-                    size="sm"
-                  >
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    Add to Cart
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+            {products.map((product) => {
+              // Ensure category is one of the allowed values
+              const allowedCategories = ["shirts", "pants", "accessories"];
+              const safeCategory = allowedCategories.includes(product.category)
+                ? (product.category as "shirts" | "pants" | "accessories")
+                : "shirts";
+              const mappedProduct: ProductType = {
+                id: product._id || "",
+                name: product.name,
+                price: product.price,
+                originalPrice: product.originalPrice,
+                category: safeCategory,
+                image:
+                  (product as any).image ||
+                  (product.images && product.images[0]) ||
+                  "/placeholder.svg",
+                images:
+                  product.images && product.images.length > 0
+                    ? product.images
+                    : [(product as any).image || "/placeholder.svg"],
+                sizes: product.sizes || [],
+                colors: product.colors || [],
+                description: product.description || "",
+                features: (product as any).features || [],
+                inStock: product.inStock,
+                rating: product.rating,
+                reviews: product.reviews,
+                soldCount: product.soldCount,
+              };
+              return (
+                <ProductCard
+                  key={mappedProduct.id}
+                  product={mappedProduct}
+                  pId={mappedProduct.id}
+                />
+              );
+            })}
           </div>
         )}
       </div>

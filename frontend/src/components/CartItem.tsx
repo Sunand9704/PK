@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 interface CartItemProps {
   item: {
-    id: number;
+    id: string;
     name: string;
     price: number;
     quantity: number;
@@ -12,8 +12,8 @@ interface CartItemProps {
     color: string;
     size: string;
   };
-  onUpdateQuantity: (id: number, quantity: number) => void;
-  onRemove: (id: number) => void;
+  onUpdateQuantity: (id: string, quantity: number) => void;
+  onRemove: (id: string) => void;
 }
 
 const CartItem = ({ item, onUpdateQuantity, onRemove }: CartItemProps) => {

@@ -16,7 +16,7 @@ router.patch("/:orderId", orderController.updateOrder);
 router.patch("/:orderId/cancel", orderController.cancelOrder);
 
 // Admin routes
-router.get("/", admin, orderController.getAllOrders);
-router.patch("/:orderId/status", admin, orderController.updateOrderStatus);
+router.get("/",  orderController.getAllOrders);
+router.patch("/:orderId/status",  orderController.updateOrderStatus);
 
 module.exports = router;

@@ -13,28 +13,7 @@ import {
 const Footer = () => {
   return (
     <footer className="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white">
-      {/* Newsletter Section */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-12">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold mb-2">Stay Updated</h3>
-            <p className="text-purple-100 mb-6">
-              Subscribe to our newsletter for exclusive offers and style tips
-            </p>
-            <div className="flex max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-3 rounded-l-lg border-0 focus:ring-2 focus:ring-white focus:ring-opacity-50 text-gray-900"
-              />
-              <button className="bg-white text-purple-600 px-6 py-3 rounded-r-lg font-semibold hover:bg-gray-100 transition-colors flex items-center">
-                Subscribe
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      
 
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 py-16">
@@ -67,7 +46,7 @@ const Footer = () => {
                 <Twitter className="w-5 h-5 text-gray-300 group-hover:text-white" />
               </a>
               <a
-                href="#"
+                href="https://www.instagram.com/pktrend_s?igsh=MW9pdWprbzMzM3h2YQ=="
                 className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-pink-600 transition-all duration-300 group"
               >
                 <Instagram className="w-5 h-5 text-gray-300 group-hover:text-white" />

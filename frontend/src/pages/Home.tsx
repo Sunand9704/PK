@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Fallback static categories in case API is not available
 const fallbackCategories = [
@@ -72,8 +73,22 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-xl">
-        Loading...
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-full max-w-2xl space-y-8">
+          <div className="flex flex-col items-center space-y-4">
+            <Skeleton className="h-12 w-48 mb-4" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="aspect-[4/3] w-full rounded-lg" />
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-8">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-80 w-full rounded-lg" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

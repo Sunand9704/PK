@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -72,7 +73,9 @@ const SignUp = () => {
         setSuccess("Account created successfully! Redirecting...");
         setTimeout(() => navigate("/"), 1500);
       } else {
-        setError(data.message || data.errors?.[0]?.msg || "Registration failed");
+        setError(
+          data.message || data.errors?.[0]?.msg || "Registration failed"
+        );
       }
     } catch (err) {
       setError("Network error");
@@ -310,7 +313,11 @@ const SignUp = () => {
               className="w-full bg-black hover:bg-gray-800 text-white"
               disabled={loading}
             >
-              {loading ? "Creating Account..." : "Create Account"}
+              {loading ? (
+                <Skeleton className="h-6 w-32 mx-auto" />
+              ) : (
+                "Create Account"
+              )}
             </Button>
 
             {/* Sign In Link */}
