@@ -334,13 +334,13 @@ const Disclaimer = () => {
               <div className="flex items-center">
                 <Mail className="w-4 h-4 mr-2 text-gray-500" />
                 <span>
-                  <strong>Email:</strong> legal@pktrends.com
+                  <strong>Email:</strong> pktrends359@gmail.com
                 </span>
               </div>
               <div className="flex items-center">
                 <Phone className="w-4 h-4 mr-2 text-gray-500" />
                 <span>
-                  <strong>Phone:</strong> +1 (234) 567-8900
+                  <strong>Phone:</strong> +91 9100998850
                 </span>
               </div>
               <div className="flex items-center">
