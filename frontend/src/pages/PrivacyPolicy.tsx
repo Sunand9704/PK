@@ -269,10 +269,10 @@ const PrivacyPolicy = () => {
               <div className="bg-gray-50 p-6 rounded-lg">
                 <div className="space-y-2">
                   <p className="text-gray-700">
-                    <strong>Email:</strong> privacy@pktrends.com
+                    <strong>Email:</strong> pktrends359@gmail.com
                   </p>
                   <p className="text-gray-700">
-                    <strong>Phone:</strong> +1 (234) 567-8900
+                    <strong>Phone:</strong> +91 9100998850
                   </p>
                   <p className="text-gray-700">
                     <strong>Address:</strong> 123 Fashion Street, New York, NY
