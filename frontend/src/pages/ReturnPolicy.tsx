@@ -26,7 +26,7 @@ const ReturnPolicy = () => {
           </p>
           <div className="flex items-center justify-center mt-4 text-sm text-gray-500">
             <Clock className="w-4 h-4 mr-2" />
-            Last updated: December 2024
+            Last updated: July 2025
           </div>
         </div>
 
