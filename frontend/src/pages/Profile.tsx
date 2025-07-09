@@ -896,9 +896,17 @@ const Orders: React.FC = () => {
                       if (!res.ok)
                         throw new Error(data.msg || "Failed to submit request");
                       setReturnSuccess("Request submitted!");
-                      setShowReturnModal(false);
-                      setReturnType("return");
-                      setReturnReason("");
+                      toast({
+                        title: "Return Request Submitted!",
+                        description: "Your return request has been submitted successfully. We'll review it and get back to you soon.",
+                      });
+                      // Close modal after a short delay to show success message
+                      setTimeout(() => {
+                        setShowReturnModal(false);
+                        setReturnType("return");
+                        setReturnReason("");
+                        setReturnSuccess("");
+                      }, 2000);
                     } catch (err: any) {
                       setReturnError(err.message);
                     } finally {
