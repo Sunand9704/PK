@@ -334,10 +334,10 @@ const TermsConditions = () => {
             </p>
             <div className="space-y-2 text-gray-700">
               <p>
-                <strong>Email:</strong> legal@pktrends.com
+                <strong>Email:</strong> pktrends359@gmail.com
               </p>
               <p>
-                <strong>Phone:</strong> +1 (234) 567-8900
+                <strong>Phone:</strong> +91 9100998850
               </p>
               <p>
                 <strong>Address:</strong> 123 Fashion Street, New York, NY
