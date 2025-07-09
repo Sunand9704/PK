@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -414,8 +415,20 @@ const ProductDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-xl">
-        Loading...
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <Skeleton className="aspect-square w-full rounded-lg" />
+          <div className="space-y-6">
+            <Skeleton className="h-10 w-2/3 mb-4" />
+            <Skeleton className="h-6 w-1/3 mb-2" />
+            <Skeleton className="h-6 w-1/4 mb-2" />
+            <Skeleton className="h-20 w-full mb-4" />
+            <Skeleton className="h-10 w-1/2 mb-2" />
+            <Skeleton className="h-10 w-1/2 mb-2" />
+            <Skeleton className="h-10 w-1/2 mb-2" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -673,9 +686,7 @@ const ProductDetail = () => {
                     </div>
                   )}
                   {showAddressForm && (
-                    <div
-                      className="space-y-4 p-4 bg-gray-50 rounded-lg shadow-md border border-gray-200 animate-fade-in"
-                    >
+                    <div className="space-y-4 p-4 bg-gray-50 rounded-lg shadow-md border border-gray-200 animate-fade-in">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="text-xl font-bold text-black">
                           Add New Address

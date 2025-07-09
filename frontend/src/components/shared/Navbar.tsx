@@ -33,6 +33,7 @@ const Navbar = () => {
   const { isAuthenticated, logout } = useAuth();
   const { cart } = useCart();
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -113,17 +114,25 @@ const Navbar = () => {
       <header className={headerClass}>
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
-            {/* Mobile Menu */}
-            <div className="md:hidden">
-              <Sheet>
+            {/* Mobile Menu and Logo */}
+            <div className="flex items-center md:hidden">
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setMobileMenuOpen(true)}
+                  >
                     <Menu className="h-6 w-6" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-80">
                   <div className="mt-6 space-y-6">
-                    <Link to="/" className="text-2xl font-bold">
+                    <Link
+                      to="/"
+                      className="text-2xl font-bold"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
                       PK TRENDS
                     </Link>
                     <nav className="space-y-4">
@@ -132,6 +141,7 @@ const Navbar = () => {
                           key={link.name}
                           to={link.href}
                           className="block text-lg font-medium hover:text-gray-600 transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
                         >
                           {link.name}
                         </Link>
@@ -141,7 +151,10 @@ const Navbar = () => {
                     <div className="flex flex-col gap-2 pt-6">
                       {!isAuthenticated ? (
                         <>
-                          <Link to="/signin">
+                          <Link
+                            to="/signin"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
                             <Button
                               variant="outline"
                               className="w-full px-5 py-2 rounded-lg font-semibold border-gray-300 hover:bg-gray-100"
@@ -149,7 +162,10 @@ const Navbar = () => {
                               Sign In
                             </Button>
                           </Link>
-                          <Link to="/signup">
+                          <Link
+                            to="/signup"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
                             <Button className="w-full px-5 py-2 rounded-lg font-semibold bg-black text-white hover:bg-gray-800">
                               Sign Up
                             </Button>
@@ -157,7 +173,10 @@ const Navbar = () => {
                         </>
                       ) : (
                         <Button
-                          onClick={logout}
+                          onClick={() => {
+                            logout();
+                            setMobileMenuOpen(false);
+                          }}
                           variant="outline"
                           className="w-full px-5 py-2 rounded-lg font-semibold border-gray-300 hover:bg-gray-100 text-black"
                         >
@@ -168,19 +187,30 @@ const Navbar = () => {
                   </div>
                 </SheetContent>
               </Sheet>
+              {/* Logo beside menu in mobile */}
+              <Link
+                to="/"
+                className="text-2xl font-bold tracking-wider flex items-center ml-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <img
+                  src="https://res.cloudinary.com/dnbqgzh4t/image/upload/v1750854725/ChatGPT_Image_Jun_24_2025_02_41_19_PM_mds73y.png"
+                  alt="PK Trends Logo"
+                  className="h-10 w-auto transition-transform duration-300 hover:scale-105"
+                />
+              </Link>
             </div>
-
-            {/* Logo */}
+            {/* Desktop Logo */}
             <Link
               to="/"
-              className="text-2xl font-bold tracking-wider flex items-center"
+              className="text-2xl font-bold tracking-wider items-center hidden md:flex"
             >
               <img
                 src="https://res.cloudinary.com/dnbqgzh4t/image/upload/v1750854725/ChatGPT_Image_Jun_24_2025_02_41_19_PM_mds73y.png"
                 alt="PK Trends Logo"
                 className="h-14 w-auto transition-transform duration-300 hover:scale-105"
               />
-              <span className="text-xl font-bold text-white ml-3 tracking-wider hidden md:inline">
+              <span className="text-xl font-bold text-white ml-3 tracking-wider">
                 PK TRENDS
               </span>
             </Link>

@@ -234,7 +234,10 @@ exports.getAllOrders = async (req, res, next) => {
       .populate("orderBy", "firstName lastName email")
       .sort({ placedAt: -1 });
 
-    res.json({ orders });
+    // Filter out orders where the product no longer exists
+    const filteredOrders = orders.filter((order) => order.productId);
+
+    res.json({ orders: filteredOrders });
   } catch (error) {
     next(error);
   }
@@ -335,6 +338,11 @@ exports.updateOrderStatus = async (req, res, next) => {
     }
 
     await order.populate("productId");
+    if (!order.productId) {
+      return res
+        .status(404)
+        .json({ msg: "Product for this order no longer exists" });
+    }
     await order.populate("orderBy", "firstName lastName email");
 
     // Send status update email

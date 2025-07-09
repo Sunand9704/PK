@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -155,7 +156,11 @@ const Contact = () => {
                 className="w-full btn-primary"
                 disabled={loading}
               >
-                {loading ? "Sending..." : "Send Message"}
+                {loading ? (
+                  <Skeleton className="h-6 w-32 mx-auto" />
+                ) : (
+                  "Send Message"
+                )}
               </Button>
             </form>
 

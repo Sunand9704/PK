@@ -62,10 +62,17 @@ const OrderSummary = ({
   const [couponDiscount, setCouponDiscount] = React.useState(0);
   const [appliedCoupon, setAppliedCoupon] = React.useState<any>(null);
   const [addresses, setAddresses] = React.useState<any[]>([]);
-  const [selectedAddressIndex, setSelectedAddressIndex] = React.useState<number | null>(null);
+  const [selectedAddressIndex, setSelectedAddressIndex] = React.useState<
+    number | null
+  >(null);
   const [showAddressForm, setShowAddressForm] = React.useState(false);
   const [addressForm, setAddressForm] = React.useState({
-    label: '', street: '', city: '', state: '', zip: '', country: ''
+    label: "",
+    street: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "",
   });
   const [addressLoading, setAddressLoading] = React.useState(false);
 
@@ -83,14 +90,17 @@ const OrderSummary = ({
       return;
     }
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/coupons/apply`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ code: couponCode, orderValue: total }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/coupons/apply`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ code: couponCode, orderValue: total }),
+        }
+      );
       const data = await res.json();
       if (!res.ok) {
         setCouponError(data.msg || "Invalid coupon");
@@ -165,7 +175,9 @@ const OrderSummary = ({
               notes: form.notes,
               couponCode: couponApplied ? couponCode : undefined,
               discount: couponApplied ? couponDiscount : 0,
-              finalPrice: couponApplied ? finalTotal : item.price * item.quantity,
+              finalPrice: couponApplied
+                ? finalTotal
+                : item.price * item.quantity,
             }),
           }
         );
@@ -232,7 +244,7 @@ const OrderSummary = ({
 
   const handleRazorpay = async () => {
     console.log("camed to razorpay function");
-    
+
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
@@ -240,7 +252,6 @@ const OrderSummary = ({
     script.onload = async () => {
       console.log("came to razorpay function key send section");
       const options = {
-
         key: import.meta.env.VITE_RAZOR_PAY_KEY, // Razorpay test key
         amount: Math.round(finalTotal * 100),
         currency: "INR",
@@ -250,7 +261,7 @@ const OrderSummary = ({
           // Create order after successful payment
           const success = await createOrder("razorpay");
           console.log(success);
-          
+
           if (success) {
             setPaymentSuccess(true);
             setShowPayment(false);
@@ -281,13 +292,18 @@ const OrderSummary = ({
 
   React.useEffect(() => {
     if (checkoutOpen && token) {
-      fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then(res => res.json())
-        .then(data => {
+      fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/profile`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+        .then((res) => res.json())
+        .then((data) => {
           setAddresses(data.addressBook || []);
-          setSelectedAddressIndex(data.addressBook && data.addressBook.length > 0 ? 0 : null);
+          setSelectedAddressIndex(
+            data.addressBook && data.addressBook.length > 0 ? 0 : null
+          );
         });
     }
   }, [checkoutOpen, token]);
@@ -306,18 +322,30 @@ const OrderSummary = ({
     setAddressLoading(true);
     try {
       if (!addressForm.street || !addressForm.city || !addressForm.country) {
-        toast({ title: 'Street, city, and country are required', variant: 'destructive' });
+        toast({
+          title: "Street, city, and country are required",
+          variant: "destructive",
+        });
         setAddressLoading(false);
         return;
       }
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/address`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(addressForm),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/user/address`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(addressForm),
+        }
+      );
       if (!res.ok) {
         const data = await res.json();
-        toast({ title: data.msg || 'Failed to add address', variant: 'destructive' });
+        toast({
+          title: data.msg || "Failed to add address",
+          variant: "destructive",
+        });
         setAddressLoading(false);
         return;
       }
@@ -325,15 +353,26 @@ const OrderSummary = ({
       setAddresses(data.addressBook || []);
       setSelectedAddressIndex((data.addressBook || []).length - 1);
       setShowAddressForm(false);
-      setAddressForm({ label: '', street: '', city: '', state: '', zip: '', country: '' });
+      setAddressForm({
+        label: "",
+        street: "",
+        city: "",
+        state: "",
+        zip: "",
+        country: "",
+      });
     } catch (err) {
-      toast({ title: err instanceof Error ? err.message : 'Error adding address', variant: 'destructive' });
+      toast({
+        title: err instanceof Error ? err.message : "Error adding address",
+        variant: "destructive",
+      });
     } finally {
       setAddressLoading(false);
     }
   };
 
-  const selectedAddress = selectedAddressIndex !== null ? addresses[selectedAddressIndex] : null;
+  const selectedAddress =
+    selectedAddressIndex !== null ? addresses[selectedAddressIndex] : null;
 
   React.useEffect(() => {
     if (selectedAddress) {
@@ -441,20 +480,32 @@ const OrderSummary = ({
 
         {couponApplied && (
           <div className="flex justify-between text-green-600">
-            <span>Discount ({appliedCoupon?.discountType === "percentage" ? `${appliedCoupon.discountValue}%` : `₹${appliedCoupon.discountValue}`})</span>
+            <span>
+              Discount (
+              {appliedCoupon?.discountType === "percentage"
+                ? `${appliedCoupon.discountValue}%`
+                : `₹${appliedCoupon.discountValue}`}
+              )
+            </span>
             <span>-₹{couponDiscount.toFixed(2)}</span>
           </div>
         )}
         {couponApplied && appliedCoupon && (
           <div className="text-xs text-gray-500 mt-1">
             {appliedCoupon.expiryDate && (
-              <div>Expires: {new Date(appliedCoupon.expiryDate).toLocaleDateString()}</div>
+              <div>
+                Expires:{" "}
+                {new Date(appliedCoupon.expiryDate).toLocaleDateString()}
+              </div>
             )}
             {appliedCoupon.minOrderValue > 0 && (
               <div>Min order: ₹{appliedCoupon.minOrderValue}</div>
             )}
             {appliedCoupon.usageLimit && (
-              <div>Usage left: {appliedCoupon.usageLimit - (appliedCoupon.usedBy?.length || 0)}</div>
+              <div>
+                Usage left:{" "}
+                {appliedCoupon.usageLimit - (appliedCoupon.usedBy?.length || 0)}
+              </div>
             )}
           </div>
         )}
@@ -479,95 +530,217 @@ const OrderSummary = ({
           </Button>
         </DialogTrigger>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Checkout</DialogTitle>
-            <DialogDescription>
-              Select your shipping address or add a new one.
-            </DialogDescription>
-          </DialogHeader>
-          {addresses.length > 0 && !showAddressForm && (
-            <div className="mb-6">
-              <h3 className="font-bold text-lg mb-3 text-black">Choose Shipping Address</h3>
-              <div className="space-y-3">
-                {addresses.map((addr, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-4 rounded-lg border-2 transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md bg-white ${selectedAddressIndex === idx ? 'border-blue-600 bg-blue-50 shadow' : 'border-gray-200'}`}
-                    onClick={() => handleSelectAddress(idx)}
-                  >
-                    <div>
-                      <div className="font-semibold text-base flex items-center gap-2">
-                        <MapPin className="w-5 h-5 text-blue-600" />
-                        {addr.label || 'Address'}
+          <div className="max-h-[70vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Checkout</DialogTitle>
+              <DialogDescription>
+                Select your shipping address or add a new one.
+              </DialogDescription>
+            </DialogHeader>
+            {addresses.length > 0 && !showAddressForm && (
+              <div className="mb-6">
+                <h3 className="font-bold text-lg mb-3 text-black">
+                  Choose Shipping Address
+                </h3>
+                <div className="space-y-3">
+                  {addresses.map((addr, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-4 rounded-lg border-2 transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md bg-white ${selectedAddressIndex === idx ? "border-blue-600 bg-blue-50 shadow" : "border-gray-200"}`}
+                      onClick={() => handleSelectAddress(idx)}
+                    >
+                      <div>
+                        <div className="font-semibold text-base flex items-center gap-2">
+                          <MapPin className="w-5 h-5 text-blue-600" />
+                          {addr.label || "Address"}
+                        </div>
+                        <div className="text-gray-700 text-sm mt-1">
+                          {addr.street}, {addr.city}, {addr.state}, {addr.zip},{" "}
+                          {addr.country}
+                        </div>
                       </div>
-                      <div className="text-gray-700 text-sm mt-1">
-                        {addr.street}, {addr.city}, {addr.state}, {addr.zip}, {addr.country}
-                      </div>
+                      {selectedAddressIndex === idx && (
+                        <CheckCircle className="w-6 h-6 text-blue-600" />
+                      )}
                     </div>
-                    {selectedAddressIndex === idx && (
-                      <CheckCircle className="w-6 h-6 text-blue-600" />
-                    )}
-                  </div>
-                ))}
-              </div>
-              <Button type="button" className="mt-5 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all" onClick={() => setShowAddressForm(true)}>
-                <Plus className="w-4 h-4" /> Add New Address
-              </Button>
-            </div>
-          )}
-          {showAddressForm && (
-            <form onSubmit={handleAddressFormSubmit} className="space-y-4 p-4 bg-gray-50 rounded-lg shadow-md border border-gray-200 animate-fade-in">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xl font-bold text-black">Add New Address</h3>
-                <button type="button" onClick={() => setShowAddressForm(false)} className="text-gray-500 hover:text-black"><X className="w-5 h-5" /></button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input name="label" placeholder="Label (e.g. Home, Work)" value={addressForm.label} onChange={handleAddressFormChange} />
-                <Input name="street" placeholder="Street" value={addressForm.street} onChange={handleAddressFormChange} required />
-                <Input name="city" placeholder="City" value={addressForm.city} onChange={handleAddressFormChange} required />
-                <Input name="state" placeholder="State" value={addressForm.state} onChange={handleAddressFormChange} />
-                <Input name="zip" placeholder="ZIP Code" value={addressForm.zip} onChange={handleAddressFormChange} />
-                <Input name="country" placeholder="Country" value={addressForm.country} onChange={handleAddressFormChange} required />
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button type="submit" disabled={addressLoading} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all">{addressLoading ? 'Saving...' : 'Save Address'}</Button>
-                <Button type="button" variant="outline" onClick={() => setShowAddressForm(false)} className="border-gray-300">Cancel</Button>
-              </div>
-            </form>
-          )}
-          {addresses.length === 0 && !showAddressForm && (
-            <Button type="button" onClick={() => setShowAddressForm(true)} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all">
-              <Plus className="w-4 h-4" /> Add Shipping Address
-            </Button>
-          )}
-          <form onSubmit={handleCheckout} className="space-y-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-            {selectedAddress && (
-              <div>
-                <h3 className="font-semibold text-lg mb-2 text-black">Contact Info</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <Input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} onBlur={() => handleBlur("email")} className={touched.email && !form.email ? "border-red-500" : ""} required />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                    <Input placeholder="Phone Number" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} onBlur={() => handleBlur("phone")} className={touched.phone && !form.phone ? "border-red-500" : ""} required />
-                  </div>
+                  ))}
                 </div>
+                <Button
+                  type="button"
+                  className="mt-5 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all"
+                  onClick={() => setShowAddressForm(true)}
+                >
+                  <Plus className="w-4 h-4" /> Add New Address
+                </Button>
               </div>
             )}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Promo code or notes (optional)</label>
-              <Input placeholder="Promo code or notes (optional)" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
-            </div>
-            {checkoutError && (<div className="text-red-500 text-sm text-center font-medium">{checkoutError}</div>)}
-            {checkoutSuccess && (<div className="text-green-600 text-sm text-center font-medium">{checkoutSuccess}</div>)}
-            <DialogFooter>
-              <Button type="submit" className="w-full bg-black text-white hover:bg-gray-800 text-lg font-semibold" disabled={checkoutLoading || !selectedAddress}>
-                {checkoutLoading ? "Submitting..." : "Continue to Payment"}
+            {showAddressForm && (
+              <form
+                onSubmit={handleAddressFormSubmit}
+                className="space-y-4 p-4 bg-gray-50 rounded-lg shadow-md border border-gray-200 animate-fade-in"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xl font-bold text-black">
+                    Add New Address
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddressForm(false)}
+                    className="text-gray-500 hover:text-black"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    name="label"
+                    placeholder="Label (e.g. Home, Work)"
+                    value={addressForm.label}
+                    onChange={handleAddressFormChange}
+                  />
+                  <Input
+                    name="street"
+                    placeholder="Street"
+                    value={addressForm.street}
+                    onChange={handleAddressFormChange}
+                    required
+                  />
+                  <Input
+                    name="city"
+                    placeholder="City"
+                    value={addressForm.city}
+                    onChange={handleAddressFormChange}
+                    required
+                  />
+                  <Input
+                    name="state"
+                    placeholder="State"
+                    value={addressForm.state}
+                    onChange={handleAddressFormChange}
+                  />
+                  <Input
+                    name="zip"
+                    placeholder="ZIP Code"
+                    value={addressForm.zip}
+                    onChange={handleAddressFormChange}
+                  />
+                  <Input
+                    name="country"
+                    placeholder="Country"
+                    value={addressForm.country}
+                    onChange={handleAddressFormChange}
+                    required
+                  />
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    type="submit"
+                    disabled={addressLoading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all"
+                  >
+                    {addressLoading ? "Saving..." : "Save Address"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowAddressForm(false)}
+                    className="border-gray-300"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            )}
+            {addresses.length === 0 && !showAddressForm && (
+              <Button
+                type="button"
+                onClick={() => setShowAddressForm(true)}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition-all"
+              >
+                <Plus className="w-4 h-4" /> Add Shipping Address
               </Button>
-            </DialogFooter>
-          </form>
+            )}
+            <form
+              onSubmit={handleCheckout}
+              className="space-y-6 bg-gray-50 p-4 rounded-lg border border-gray-200"
+            >
+              {selectedAddress && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-2 text-black">
+                    Contact Info
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                      </label>
+                      <Input
+                        placeholder="Email"
+                        type="email"
+                        value={form.email}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, email: e.target.value }))
+                        }
+                        onBlur={() => handleBlur("email")}
+                        className={
+                          touched.email && !form.email ? "border-red-500" : ""
+                        }
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Phone Number
+                      </label>
+                      <Input
+                        placeholder="Phone Number"
+                        value={form.phone}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, phone: e.target.value }))
+                        }
+                        onBlur={() => handleBlur("phone")}
+                        className={
+                          touched.phone && !form.phone ? "border-red-500" : ""
+                        }
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Promo code or notes (optional)
+                </label>
+                <Input
+                  placeholder="Promo code or notes (optional)"
+                  value={form.notes}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, notes: e.target.value }))
+                  }
+                />
+              </div>
+              {checkoutError && (
+                <div className="text-red-500 text-sm text-center font-medium">
+                  {checkoutError}
+                </div>
+              )}
+              {checkoutSuccess && (
+                <div className="text-green-600 text-sm text-center font-medium">
+                  {checkoutSuccess}
+                </div>
+              )}
+              <DialogFooter>
+                <Button
+                  type="submit"
+                  className="w-full bg-black text-white hover:bg-gray-800 text-lg font-semibold"
+                  disabled={checkoutLoading || !selectedAddress}
+                >
+                  {checkoutLoading ? "Submitting..." : "Continue to Payment"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </div>
         </DialogContent>
       </Dialog>
 

@@ -19,6 +19,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -306,7 +307,7 @@ const SignIn = () => {
               className="w-full bg-black hover:bg-gray-800 text-white"
               disabled={loading}
             >
-              {loading ? "Signing In..." : "Sign In"}
+              {loading ? <Skeleton className="h-6 w-24 mx-auto" /> : "Sign In"}
             </Button>
 
             {/* Sign Up Link */}
