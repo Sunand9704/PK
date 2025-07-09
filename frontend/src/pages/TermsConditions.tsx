@@ -339,10 +339,9 @@ const TermsConditions = () => {
               <p>
                 <strong>Phone:</strong> +91 9100998850
               </p>
-              <p>
-                <strong>Address:</strong> 123 Fashion Street, New York, NY
-                10001, United States
-              </p>
+              <span>
+                  <strong>Address:</strong> Srinivas Center , Nandyala , Telagana,India
+                </span>
             </div>
           </section>
         </div>
