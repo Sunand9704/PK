@@ -135,82 +135,83 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                 key={product._id}
                 className="overflow-hidden hover:shadow-lg transition-shadow"
               >
-                <div className="relative">
-                  <img
-                    src={getImageSrc(product)}
-                    alt={product.name}
-                    className="w-full h-48 object-cover"
-                    onError={() => handleImageError(product._id)}
-                  />
-                  {!product.inStock && (
-                    <div className="absolute top-2 right-2">
-                      <Badge variant="destructive">Out of Stock</Badge>
-                    </div>
-                  )}
-                  {product.originalPrice &&
-                    product.originalPrice > product.price && (
-                      <div className="absolute top-2 left-2">
-                        <Badge variant="secondary">
-                          {Math.round(
-                            ((product.originalPrice - product.price) /
-                              product.originalPrice) *
-                              100
-                          )}
-                          % OFF
-                        </Badge>
+                <Link to={`/products/${product._id}`} className="block">
+                  <div className="relative">
+                    <img
+                      src={getImageSrc(product)}
+                      alt={product.name}
+                      className="w-full h-48 object-cover cursor-pointer"
+                      onError={() => handleImageError(product._id)}
+                    />
+                    {!product.inStock && (
+                      <div className="absolute top-2 right-2">
+                        <Badge variant="destructive">Out of Stock</Badge>
                       </div>
                     )}
-                </div>
-                <CardContent className="p-4">
-                  <div className="mb-2">
-                    <Badge variant="outline" className="text-xs">
-                      {product.category}
-                    </Badge>
+                    {product.originalPrice &&
+                      product.originalPrice > product.price && (
+                        <div className="absolute top-2 left-2">
+                          <Badge variant="secondary">
+                            {Math.round(
+                              ((product.originalPrice - product.price) /
+                                product.originalPrice) *
+                                100
+                            )}
+                            % OFF
+                          </Badge>
+                        </div>
+                      )}
                   </div>
-                  <Link to={`/products/${product._id}`}>
+                  <CardContent className="p-4">
+                    <div className="mb-2">
+                      <Badge variant="outline" className="text-xs">
+                        {product.category}
+                      </Badge>
+                    </div>
                     <h3 className="font-semibold text-lg mb-2 hover:text-blue-600 transition-colors">
                       {product.name}
                     </h3>
-                  </Link>
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                    {product.description}
-                  </p>
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      {product.description}
+                    </p>
 
-                  <div className="flex items-center mb-2">
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < Math.floor(product.rating)
-                              ? "text-yellow-400 fill-current"
-                              : "text-gray-300"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-sm text-gray-500 ml-1">
-                      ({product.reviews})
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <span className="text-lg font-bold text-green-600">
-                        {formatCurrency(product.price)}
+                    <div className="flex items-center mb-2">
+                      <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-4 w-4 ${
+                              i < Math.floor(product.rating)
+                                ? "text-yellow-400 fill-current"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm text-gray-500 ml-1">
+                        ({product.reviews})
                       </span>
-                      {product.originalPrice &&
-                        product.originalPrice > product.price && (
-                          <span className="text-sm text-gray-500 line-through ml-2">
-                            {formatCurrency(product.originalPrice)}
-                          </span>
-                        )}
                     </div>
-                    <span className="text-sm text-gray-500">
-                      {product.soldCount} sold
-                    </span>
-                  </div>
 
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <span className="text-lg font-bold text-green-600">
+                          {formatCurrency(product.price)}
+                        </span>
+                        {product.originalPrice &&
+                          product.originalPrice > product.price && (
+                            <span className="text-sm text-gray-500 line-through ml-2">
+                              {formatCurrency(product.originalPrice)}
+                            </span>
+                          )}
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {product.soldCount} sold
+                      </span>
+                    </div>
+                  </CardContent>
+                </Link>
+                <div className="px-4 pb-4">
                   <Button
                     onClick={() => handleAddToCart(product)}
                     disabled={!product.inStock}
@@ -220,7 +221,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                     <ShoppingCart className="h-4 w-4 mr-2" />
                     Add to Cart
                   </Button>
-                </CardContent>
+                </div>
               </Card>
             ))}
           </div>
