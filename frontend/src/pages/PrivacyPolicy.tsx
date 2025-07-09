@@ -275,8 +275,7 @@ const PrivacyPolicy = () => {
                     <strong>Phone:</strong> +91 9100998850
                   </p>
                   <p className="text-gray-700">
-                    <strong>Address:</strong> 123 Fashion Street, New York, NY
-                    10001
+                    <strong>Address:</strong>Srinivas Center , Nandyala , Telagana,India
                   </p>
                 </div>
               </div>
