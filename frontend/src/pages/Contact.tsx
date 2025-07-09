@@ -167,8 +167,8 @@ const Contact = () => {
             <div className="mt-12 pt-8 border-t text-center">
               <h3 className="font-semibold mb-4">Other Ways to Reach Us</h3>
               <div className="space-y-2 text-gray-600">
-                <p>Email: hello@pktrends.com</p>
-                <p>Phone: +1 (555) 123-4567</p>
+                <p>Email:pktrends359@gmail.com</p>
+                <p>Phone: +919100998850</p>
                 <p>Business Hours: Mon-Fri 9AM-6PM EST</p>
               </div>
             </div>
