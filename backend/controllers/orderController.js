@@ -363,6 +363,8 @@ exports.updateOrderStatus = async (req, res, next) => {
             Quantity: ${order.quantity}<br>
             Total Amount: ₹${order.price * order.quantity}
             <br><br>
+            <span style="color: #d9534f; font-weight: bold;">Note: The product can only be returned within two days of delivery. Please initiate any return requests within this period.</span>
+            <br><br>
             We'll notify you once your order is shipped.
           `;
           break;
@@ -375,6 +377,8 @@ exports.updateOrderStatus = async (req, res, next) => {
             Product: ${order.productId.name}<br>
             Quantity: ${order.quantity}<br>
             Total Amount: ₹${order.price * order.quantity}
+            <br><br>
+            <span style="color: #d9534f; font-weight: bold;">Note: The product can only be returned within two days of delivery. Please initiate any return requests within this period.</span>
             <br><br>
             You'll receive another notification when your order is delivered.
           `;
@@ -389,6 +393,8 @@ exports.updateOrderStatus = async (req, res, next) => {
             Quantity: ${order.quantity}<br>
             Total Amount: ₹${order.price * order.quantity}
             <br><br>
+            <span style="color: #d9534f; font-weight: bold;">Note: The product can only be returned within two days of delivery. Please initiate any return requests within this period.</span>
+            <br><br>
             Thank you for choosing PK Trends! We'd love to hear your feedback.
           `;
           break;
@@ -402,6 +408,8 @@ exports.updateOrderStatus = async (req, res, next) => {
             Quantity: ${order.quantity}<br>
             Total Amount: ₹${order.price * order.quantity}
             <br><br>
+            <span style="color: #d9534f; font-weight: bold;">Note: The product can only be returned within two days of delivery. Please initiate any return requests within this period.</span>
+            <br><br>
             If you have any questions about the cancellation, please contact our support team.
           `;
           break;
@@ -414,6 +422,8 @@ exports.updateOrderStatus = async (req, res, next) => {
             Product: ${order.productId.name}<br>
             Quantity: ${order.quantity}<br>
             Total Amount: ₹${order.price * order.quantity}
+            <br><br>
+            <span style="color: #d9534f; font-weight: bold;">Note: The product can only be returned within two days of delivery. Please initiate any return requests within this period.</span>
           `;
       }
 
