@@ -227,8 +227,7 @@ const ShippingPolicy = () => {
               <div className="flex items-center">
                 <MapPin className="w-4 h-4 mr-2 text-gray-500" />
                 <span>
-                  <strong>Address:</strong> 123 Fashion Street, New York, NY
-                  10001, United States
+                  <strong>Address:</strong> Srinivas Center , Nandyala , Telagana,India
                 </span>
               </div>
             </div>
